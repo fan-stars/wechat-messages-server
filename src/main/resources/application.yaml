@@ -1,0 +1,13 @@
+server:
+  port: 3080
+
+spring:
+  application:
+    name: wechat-messages-server
+
+wechat:
+  mp:
+    appId: xxxxxxxxxxxxxxxxxxxxxxxx
+    secret: xxxxxxxxxxxxxxxxxxxxxxxx
+    token: xxxxxxxxxxxxxxxxxxxxxxxx
+    aesKey: xxxxxxxxxxxxxxxxxxxxxxxx
