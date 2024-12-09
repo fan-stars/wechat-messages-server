@@ -5,6 +5,9 @@ spring:
   application:
     name: wechat-messages-server
 
+log:
+  path: log
+
 wechat:
   mp:
     appId: xxxxxxxxxxxxxxxxxxxxxxxx
