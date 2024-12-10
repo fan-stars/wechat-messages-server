@@ -15,7 +15,7 @@ wechat:
     token: xxxxxxxxxxxxxxxxxxxxxxxx
     aesKey: xxxxxxxxxxxxxxxxxxxxxxxx
   msg-push:
-    pushInfos:
+    push-infos:
       - app-id: xxxxxxxxxxxxxxxxxxxxxxxx
         push-url: xxxxxxxxxxxxxxxxxxxxxxxx
         priority: 1

@@ -18,9 +18,20 @@ public class MsgPushConfig {
     @Getter
     @Setter
     public static class MsgPushDTO {
+
+        /**
+         * APPID
+         */
         private String appId;
+        /**
+         * 推送URL
+         */
         private String pushUrl;
+        /**
+         * 优先级, 数值越小, 优先级越高
+         */
         private Integer priority;
+
     }
 
 }
