@@ -1,0 +1,3 @@
+cn.fanstars.framework.security.config.FanSecurityAutoConfiguration
+cn.fanstars.framework.security.config.FanWebSecurityConfigurerAdapter
+cn.fanstars.framework.operatelog.config.FanOperateLogConfiguration

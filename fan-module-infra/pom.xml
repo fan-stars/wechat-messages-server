@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>cn.fanstars.base</groupId>
+        <artifactId>fan-base</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>fan-module-infra</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>cn.fanstars.base</groupId>
+            <artifactId>fan-framework-web-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.fanstars.base</groupId>
+            <artifactId>fan-framework-web-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.fanstars.base</groupId>
+            <artifactId>fan-framework-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.fanstars.base</groupId>
+            <artifactId>fan-framework-excel</artifactId>
+        </dependency>
+
+        <!-- 三方云服务相关 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId> <!-- 文件类型的识别 -->
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId> <!-- use mapstruct-jdk8 for Java 8 or higher -->
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

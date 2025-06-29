@@ -1,0 +1,2 @@
+cn.fanstars.framework.redis.config.FanRedisAutoConfiguration
+cn.fanstars.framework.redis.config.FanCacheAutoConfiguration
