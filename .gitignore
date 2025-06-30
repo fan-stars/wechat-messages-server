@@ -60,3 +60,4 @@ application-my.yaml
 
 **/package-info.java
 **Controller.http
+*.log*.gz
