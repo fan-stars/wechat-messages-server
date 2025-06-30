@@ -183,7 +183,7 @@ public class CodegenServiceImpl implements CodegenService {
             if (codegenColumn == null) {
                 return null;
             }
-            if (!primaryKeyPredicate.test(tableField, codegenColumn) || codegenColumn.getOrdinalPosition() != index) {
+            if (!primaryKeyPredicate.test(tableField, codegenColumn) || codegenColumn.getOrdinalPosition() != index + 1) {
                 return columnName;
             }
             return null;
@@ -201,10 +201,31 @@ public class CodegenServiceImpl implements CodegenService {
 
         // 4.1 插入新增的字段
         List<CodegenColumnDO> columns = codegenBuilder.buildColumns(tableId, tableFields);
+        mergeColumnPropertiesFromMap(columns, codegenColumnDOMap);
         codegenColumnMapper.insertBatch(columns);
         // 4.2 删除不存在的字段
         if (CollUtil.isNotEmpty(deleteColumnIds)) {
             codegenColumnMapper.deleteByIds(deleteColumnIds);
+        }
+    }
+
+    private static void mergeColumnPropertiesFromMap(List<CodegenColumnDO> columns, Map<String, CodegenColumnDO> codegenColumnDOMap) {
+        for (CodegenColumnDO column : columns) {
+            String columnName = column.getColumnName();
+            CodegenColumnDO codegenColumnDO = codegenColumnDOMap.get(columnName);
+            if (codegenColumnDO == null) {
+                continue;
+            }
+            if (Objects.equals(columnName, codegenColumnDO.getColumnName())) {
+                column.setDictType(codegenColumnDO.getDictType());
+                column.setColumnComment(codegenColumnDO.getColumnComment());
+                column.setCreateOperation(codegenColumnDO.getCreateOperation());
+                column.setUpdateOperation(codegenColumnDO.getUpdateOperation());
+                column.setListOperation(codegenColumnDO.getListOperation());
+                column.setListOperationCondition(codegenColumnDO.getListOperationCondition());
+                column.setListOperationResult(codegenColumnDO.getListOperationResult());
+                column.setHtmlType(codegenColumnDO.getHtmlType());
+            }
         }
     }
 
