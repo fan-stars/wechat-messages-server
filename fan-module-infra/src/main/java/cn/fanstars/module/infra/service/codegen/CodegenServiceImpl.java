@@ -206,7 +206,7 @@ public class CodegenServiceImpl implements CodegenService {
         if (CollUtil.isNotEmpty(tableFields)) {
             List<CodegenColumnDO> codegenColumnDOS = codegenColumnMapper.selectList(new LambdaQueryWrapperX<CodegenColumnDO>()
                     .eq(CodegenColumnDO::getTableId, tableId)
-                    .notIn(CodegenColumnDO::getId, deleteColumnIds)
+                    .notInIfPresent(CodegenColumnDO::getId, deleteColumnIds)
                     .orderByDesc(CodegenColumnDO::getOrdinalPosition)
                     .last("LIMIT 1"));
             ordinalPosition = codegenColumnDOS.isEmpty() ? 1 : codegenColumnDOS.get(0).getOrdinalPosition() + 1;
