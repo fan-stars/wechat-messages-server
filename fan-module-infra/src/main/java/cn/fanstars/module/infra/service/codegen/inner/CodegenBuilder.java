@@ -123,8 +123,11 @@ public class CodegenBuilder {
     }
 
     public List<CodegenColumnDO> buildColumns(Long tableId, List<TableField> tableFields) {
+        return buildColumns(tableId, tableFields, 1);
+    }
+
+    public List<CodegenColumnDO> buildColumns(Long tableId, List<TableField> tableFields, int index) {
         List<CodegenColumnDO> columns = CodegenConvert.INSTANCE.convertList(tableFields);
-        int index = 1;
         for (CodegenColumnDO column : columns) {
             column.setTableId(tableId);
             column.setOrdinalPosition(index++);

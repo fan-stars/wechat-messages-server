@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
+import cn.fanstars.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenCreateListReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenUpdateReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.CodegenTablePageReqVO;
@@ -200,7 +201,17 @@ public class CodegenServiceImpl implements CodegenService {
         }
 
         // 4.1 插入新增的字段
-        List<CodegenColumnDO> columns = codegenBuilder.buildColumns(tableId, tableFields);
+        // 获取最大的排序字段
+        int ordinalPosition = 1;
+        if (CollUtil.isNotEmpty(tableFields)) {
+            List<CodegenColumnDO> codegenColumnDOS = codegenColumnMapper.selectList(new LambdaQueryWrapperX<CodegenColumnDO>()
+                    .eq(CodegenColumnDO::getTableId, tableId)
+                    .notIn(CodegenColumnDO::getId, deleteColumnIds)
+                    .orderByDesc(CodegenColumnDO::getOrdinalPosition)
+                    .last("LIMIT 1"));
+            ordinalPosition = codegenColumnDOS.isEmpty() ? 1 : codegenColumnDOS.get(0).getOrdinalPosition() + 1;
+        }
+        List<CodegenColumnDO> columns = codegenBuilder.buildColumns(tableId, tableFields, ordinalPosition);
         mergeColumnPropertiesFromMap(columns, codegenColumnDOMap);
         codegenColumnMapper.insertBatch(columns);
         // 4.2 删除不存在的字段
