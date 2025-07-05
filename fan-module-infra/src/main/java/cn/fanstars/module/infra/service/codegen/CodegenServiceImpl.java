@@ -175,8 +175,8 @@ public class CodegenServiceImpl implements CodegenService {
         BiPredicate<TableField, CodegenColumnDO> primaryKeyPredicate =
                 (tableField, codegenColumn) -> tableField.getMetaInfo().getJdbcType().name().equals(codegenColumn.getDataType())
                         && tableField.getMetaInfo().isNullable() == codegenColumn.getNullable()
-                        && tableField.isKeyFlag() == codegenColumn.getPrimaryKey()
-                        && tableField.getComment().equals(codegenColumn.getColumnComment());
+                        && tableField.isKeyFlag() == codegenColumn.getPrimaryKey();
+//                        && tableField.getComment().equals(codegenColumn.getColumnComment());
         Set<String> modifyFieldNames = IntStream.range(0, tableFields.size()).mapToObj(index -> {
             TableField tableField = tableFields.get(index);
             String columnName = tableField.getColumnName();
@@ -202,13 +202,20 @@ public class CodegenServiceImpl implements CodegenService {
 
         // 4.1 插入新增的字段
         if (CollUtil.isNotEmpty(tableFields)) {
-            // 获取最大的排序字段
+            // 根据排序获取原有的字段
             List<CodegenColumnDO> codegenColumnDOS = codegenColumnMapper.selectList(new LambdaQueryWrapperX<CodegenColumnDO>()
                     .eq(CodegenColumnDO::getTableId, tableId)
                     .notInIfPresent(CodegenColumnDO::getId, deleteColumnIds)
-                    .orderByDesc(CodegenColumnDO::getOrdinalPosition)
-                    .last("LIMIT 1"));
-            int ordinalPosition = codegenColumnDOS.isEmpty() ? 1 : codegenColumnDOS.get(0).getOrdinalPosition() + 1;
+                    .orderByAsc(CodegenColumnDO::getOrdinalPosition));
+            // 更新排序
+            int ordinalPosition = 1;
+            for (CodegenColumnDO codegenColumnDO : codegenColumnDOS) {
+                if (codegenColumnDO.getOrdinalPosition() != ordinalPosition) {
+                    codegenColumnDO.setOrdinalPosition(ordinalPosition);
+                    codegenColumnMapper.updateById(codegenColumnDO);
+                }
+                ordinalPosition++;
+            }
             List<CodegenColumnDO> columns = codegenBuilder.buildColumns(tableId, tableFields, ordinalPosition);
             mergeColumnPropertiesFromMap(columns, codegenColumnDOMap);
             codegenColumnMapper.insertBatch(columns);
