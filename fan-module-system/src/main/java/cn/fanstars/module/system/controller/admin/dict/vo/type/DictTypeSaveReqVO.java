@@ -28,6 +28,9 @@ public class DictTypeSaveReqVO {
     @NotNull(message = "状态不能为空")
     private Integer status;
 
+    @Schema(description = "数据值 key: value 冒号间隔, 一行一个", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String dataValues;
+
     @Schema(description = "备注", example = "快乐的备注")
     private String remark;
 

@@ -1,9 +1,12 @@
 package cn.fanstars.module.system.service.dict;
 
 import cn.hutool.core.util.StrUtil;
+import cn.fanstars.framework.common.enums.CommonStatusEnum;
+import cn.fanstars.framework.common.exception.ServiceException;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.date.LocalDateTimeUtils;
 import cn.fanstars.framework.common.util.object.BeanUtils;
+import cn.fanstars.module.system.controller.admin.dict.vo.data.DictDataSaveReqVO;
 import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypePageReqVO;
 import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypeSaveReqVO;
 import cn.fanstars.module.system.dal.dataobject.dict.DictTypeDO;
@@ -11,8 +14,10 @@ import cn.fanstars.module.system.dal.mysql.dict.DictTypeMapper;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -48,6 +53,7 @@ public class DictTypeServiceImpl implements DictTypeService {
     }
 
     @Override
+    @Transactional
     public Long createDictType(DictTypeSaveReqVO createReqVO) {
         // 校验字典类型的名字的唯一性
         validateDictTypeNameUnique(null, createReqVO.getName());
@@ -58,7 +64,39 @@ public class DictTypeServiceImpl implements DictTypeService {
         DictTypeDO dictType = BeanUtils.toBean(createReqVO, DictTypeDO.class);
         dictType.setDeletedTime(LocalDateTimeUtils.EMPTY); // 唯一索引，避免 null 值
         dictTypeMapper.insert(dictType);
+
+        validateAndSaveDictData(createReqVO);
         return dictType.getId();
+    }
+
+    private void validateAndSaveDictData(DictTypeSaveReqVO createReqVO) {
+        String dataValues;
+        if (StrUtil.isEmpty(dataValues = createReqVO.getDataValues())) {
+            return;
+        }
+        String[] dataValue = dataValues.split("\n");
+        List<DictDataSaveReqVO> dictDataSaveReqVOS = new ArrayList<>(dataValue.length);
+        int sort = 1;
+        for (String item : dataValue) {
+            if (StrUtil.isEmpty(item.trim())) {
+                continue;
+            }
+            String[] keyValue = item.split(":");
+            if (keyValue.length != 2) {
+                throw new ServiceException(DICT_TYPE_CHILDREN_ERROR);
+            }
+            DictDataSaveReqVO dictDataDO = new DictDataSaveReqVO();
+            dictDataDO.setSort(sort++);
+            dictDataDO.setDictType(createReqVO.getType());
+            dictDataDO.setLabel(keyValue[0].trim());
+            dictDataDO.setValue(keyValue[1].trim());
+            dictDataDO.setDictType(createReqVO.getType());
+            dictDataDO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+            dictDataSaveReqVOS.add(dictDataDO);
+        }
+        for (DictDataSaveReqVO dictDataSaveReqVO : dictDataSaveReqVOS) {
+            dictDataService.createDictData(dictDataSaveReqVO);
+        }
     }
 
     @Override
