@@ -88,8 +88,8 @@ public class DictTypeServiceImpl implements DictTypeService {
             DictDataSaveReqVO dictDataDO = new DictDataSaveReqVO();
             dictDataDO.setSort(sort++);
             dictDataDO.setDictType(createReqVO.getType());
-            dictDataDO.setLabel(keyValue[0].trim());
-            dictDataDO.setValue(keyValue[1].trim());
+            dictDataDO.setLabel(keyValue[1].trim());
+            dictDataDO.setValue(keyValue[0].trim());
             dictDataDO.setDictType(createReqVO.getType());
             dictDataDO.setStatus(CommonStatusEnum.ENABLE.getStatus());
             dictDataSaveReqVOS.add(dictDataDO);
