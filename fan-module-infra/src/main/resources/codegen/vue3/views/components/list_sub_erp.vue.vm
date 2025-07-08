@@ -56,16 +56,20 @@
         align="center"
         prop="${javaField}"
         :formatter="dateFormatter"
-        #if ($widthFlag) width="${colWidth}px" #else width="180px" #end
+        #if ($widthFlag)
+        width="${colWidth}px"
+        #else
+        width="180px"
+        #end
       />
         #elseif($column.dictType && "" != $column.dictType)## 数据字典
-      <el-table-column label="${comment}" align="center" prop="${javaField}" #if ($widthFlag) width="${colWidth}px" #end>
+      <el-table-column label="${comment}" align="center" prop="${javaField}" #if ($widthFlag)width="${colWidth}px"#end>
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.$dictType.toUpperCase()" :value="scope.row.${column.javaField}" />
         </template>
       </el-table-column>
         #else
-      <el-table-column label="${comment}" align="center" prop="${javaField}" #if ($widthFlag) width="${colWidth}px" #end/>
+      <el-table-column label="${comment}" align="center" prop="${javaField}" #if ($widthFlag)width="${colWidth}px"#end/>
         #end
       #end
     #end
