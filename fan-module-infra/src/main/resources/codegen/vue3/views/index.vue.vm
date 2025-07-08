@@ -200,9 +200,9 @@
         #if ($widthFlag) width="${colWidth}px" #else width="180px" #end
       />
         #elseif($column.dictType && "" != $column.dictType)## 数据字典
-      <el-table-column label="${comment}" align="center" prop="${javaField}">
+      <el-table-column label="${comment}" align="center" prop="${javaField}" #if ($widthFlag) width="${colWidth}px" #end>
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.$dictType.toUpperCase()" :value="scope.row.${column.javaField}" #if ($widthFlag) width="${colWidth}px" #end/>
+          <dict-tag :type="DICT_TYPE.$dictType.toUpperCase()" :value="scope.row.${column.javaField}" />
         </template>
       </el-table-column>
         #else
