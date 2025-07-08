@@ -1,5 +1,6 @@
 package cn.fanstars.module.system.service.dict;
 
+import cn.fanstars.framework.common.biz.system.dict.dto.DictTypeSaveReqDTO;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypePageReqVO;
 import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypeSaveReqVO;
@@ -73,5 +74,12 @@ public interface DictTypeService {
      * @return 字典类型列表
      */
     List<DictTypeDO> getDictTypeList();
+
+    /**
+     * 创建字典类型数据
+     *
+     * @param dictTypeSaveReqDTO 字典类型信息
+     */
+    void syncDictTypeData(DictTypeSaveReqDTO dictTypeSaveReqDTO);
 
 }
