@@ -131,4 +131,9 @@ public class CodegenColumnDO extends BaseDO {
      */
     private String htmlType;
 
+    /**
+     * 列宽，前端表格使用
+     */
+    private Long colWidth;
+
 }

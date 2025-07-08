@@ -63,6 +63,9 @@ public class CodegenColumnRespVO {
     @Schema(description = "显示类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "input")
     private String htmlType;
 
+    @Schema(description = "列宽，前端表格使用", requiredMode = Schema.RequiredMode.REQUIRED, example = "100")
+    private Long colWidth;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDateTime createTime;
 

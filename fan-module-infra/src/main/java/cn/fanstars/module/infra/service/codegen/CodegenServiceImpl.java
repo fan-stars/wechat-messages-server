@@ -242,6 +242,7 @@ public class CodegenServiceImpl implements CodegenService {
                 column.setListOperationCondition(codegenColumnDO.getListOperationCondition());
                 column.setListOperationResult(codegenColumnDO.getListOperationResult());
                 column.setHtmlType(codegenColumnDO.getHtmlType());
+                column.setColWidth(codegenColumnDO.getColWidth());
             }
         }
     }

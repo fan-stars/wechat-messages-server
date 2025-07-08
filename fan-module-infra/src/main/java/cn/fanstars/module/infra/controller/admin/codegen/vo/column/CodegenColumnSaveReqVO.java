@@ -77,4 +77,7 @@ public class CodegenColumnSaveReqVO {
     @NotNull(message = "显示类型不能为空")
     private String htmlType;
 
+    @Schema(description = "列宽，前端表格使用", requiredMode = Schema.RequiredMode.REQUIRED, example = "100")
+    private Long colWidth;
+
 }

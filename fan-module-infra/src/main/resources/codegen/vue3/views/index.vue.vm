@@ -189,22 +189,24 @@
         #set ($javaField = $column.javaField)
         #set ($AttrName=$column.javaField.substring(0,1).toUpperCase() + ${column.javaField.substring(1)})
         #set ($comment=$column.columnComment)
+        #set ($colWidth=$column.colWidth)
+        #set ($widthFlag=$column.colWidth > 0)
         #if ($column.javaType == "LocalDateTime")## 时间类型
       <el-table-column
         label="${comment}"
         align="center"
         prop="${javaField}"
         :formatter="dateFormatter"
-        width="180px"
+        #if ($widthFlag) width="${colWidth}px" #else width="180px" #end
       />
         #elseif($column.dictType && "" != $column.dictType)## 数据字典
       <el-table-column label="${comment}" align="center" prop="${javaField}">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.$dictType.toUpperCase()" :value="scope.row.${column.javaField}" />
+          <dict-tag :type="DICT_TYPE.$dictType.toUpperCase()" :value="scope.row.${column.javaField}" #if ($widthFlag) width="${colWidth}px" #end/>
         </template>
       </el-table-column>
         #else
-      <el-table-column label="${comment}" align="center" prop="${javaField}" />
+      <el-table-column label="${comment}" align="center" prop="${javaField}" #if ($widthFlag) width="${colWidth}px" #end/>
         #end
       #end
     #end
