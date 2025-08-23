@@ -1,0 +1,2 @@
+cn.fanstars.framework.okhttp.config.FanOkHttpAutoConfiguration
+cn.fanstars.framework.retrofit2.config.FanRetrofit2AutoConfiguration
