@@ -6,6 +6,7 @@ import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenCreateListReqVO;
+import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenDetailsJsonRespVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenUpdateReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.CodegenTablePageReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.DatabaseTableRespVO;
@@ -23,6 +24,7 @@ import com.baomidou.mybatisplus.generator.config.po.TableField;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,7 @@ import static cn.fanstars.module.infra.enums.ErrorCodeConstants.*;
  *
  * @author 繁星源码
  */
+@Slf4j
 @Service
 public class CodegenServiceImpl implements CodegenService {
 
@@ -235,6 +238,7 @@ public class CodegenServiceImpl implements CodegenService {
             }
             if (Objects.equals(columnName, codegenColumnDO.getColumnName())) {
                 column.setDictType(codegenColumnDO.getDictType());
+                column.setExample(codegenColumnDO.getExample());
                 column.setColumnComment(codegenColumnDO.getColumnComment());
                 column.setCreateOperation(codegenColumnDO.getCreateOperation());
                 column.setUpdateOperation(codegenColumnDO.getUpdateOperation());
@@ -335,6 +339,31 @@ public class CodegenServiceImpl implements CodegenService {
                 codegenTableMapper.selectListByDataSourceConfigId(dataSourceConfigId), CodegenTableDO::getTableName);
         tables.removeIf(table -> existsTables.contains(table.getName()));
         return BeanUtils.toBean(tables, DatabaseTableRespVO.class);
+    }
+
+    @Override
+    public List<CodegenDetailsJsonRespVO> detailsJson(Long tableId) {
+        CodegenTableDO table = codegenTableMapper.selectById(tableId);
+        if (table == null) {
+            throw exception(CODEGEN_TABLE_NOT_EXISTS);
+        }
+        List<CodegenColumnDO> columns = codegenColumnMapper.selectListByTableId(tableId);
+
+        List<CodegenDetailsJsonRespVO> codegenDetailsJsonRespVOS = new ArrayList<>();
+        for (CodegenColumnDO column : columns) {
+            CodegenDetailsJsonRespVO codegenDetailsJsonRespVO = new CodegenDetailsJsonRespVO();
+            codegenDetailsJsonRespVO.setKey(column.getJavaField());
+            codegenDetailsJsonRespVO.setLabel(column.getColumnComment());
+            codegenDetailsJsonRespVO.setValue("");
+            if (StrUtil.isNotEmpty(column.getDictType())) {
+                codegenDetailsJsonRespVO.setType("dict");
+                codegenDetailsJsonRespVO.setDictTagType("DICT_TYPE." + column.getDictType().toUpperCase());
+            } else if (column.getJavaType().equals("LocalDateTime")) {
+                codegenDetailsJsonRespVO.setType("date");
+            }
+            codegenDetailsJsonRespVOS.add(codegenDetailsJsonRespVO);
+        }
+        return codegenDetailsJsonRespVOS;
     }
 
 }

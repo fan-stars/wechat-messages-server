@@ -5,10 +5,7 @@ import cn.hutool.core.util.ZipUtil;
 import cn.fanstars.framework.common.pojo.CommonResult;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
-import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenCreateListReqVO;
-import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenDetailRespVO;
-import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenPreviewRespVO;
-import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenUpdateReqVO;
+import cn.fanstars.module.infra.controller.admin.codegen.vo.*;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.CodegenTablePageReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.CodegenTableRespVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.DatabaseTableRespVO;
@@ -155,6 +152,15 @@ public class CodegenController {
         ZipUtil.zip(outputStream, paths, ins);
         // 输出
         writeAttachment(response, "codegen.zip", outputStream.toByteArray());
+    }
+
+    @Operation(summary = "获取详情列表JSON")
+    @GetMapping("/details-json")
+    @Parameter(name = "tableId", description = "表编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('infra:codegen:download')")
+    public CommonResult<List<CodegenDetailsJsonRespVO>> detailsJson(@RequestParam("tableId") Long tableId) {
+        List<CodegenDetailsJsonRespVO> detailsJson = codegenService.detailsJson(tableId);
+        return success(detailsJson);
     }
 
 }

@@ -2,6 +2,7 @@ package cn.fanstars.module.infra.service.codegen;
 
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenCreateListReqVO;
+import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenDetailsJsonRespVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenUpdateReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.CodegenTablePageReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.DatabaseTableRespVO;
@@ -105,4 +106,5 @@ public interface CodegenService {
      */
     List<DatabaseTableRespVO> getDatabaseTableList(Long dataSourceConfigId, String name, String comment);
 
+    List<CodegenDetailsJsonRespVO> detailsJson(Long tableId);
 }
