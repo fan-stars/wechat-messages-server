@@ -21,7 +21,6 @@
         <dependency>
             <groupId>cn.fanstars.base</groupId>
             <artifactId>fan-framework-common</artifactId>
-            <version>2.6.0-jdk8-SNAPSHOT</version>
         </dependency>
 
         <dependency>
