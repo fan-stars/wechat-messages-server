@@ -2,12 +2,14 @@ package cn.fanstars;
 
 import cn.hutool.core.io.FileTypeUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.util.collection.SetUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.Collection;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -26,13 +28,13 @@ import static java.io.File.separator;
 public class ProjectReactor {
 
     private static final String GROUP_ID = "cn.fanstars.base";
-    private static final String ARTIFACT_ID = "fan";
+    private static final String ARTIFACT_ID = "fan-base";
     private static final String PACKAGE_NAME = "cn.fanstars";
     private static final String TITLE = "基础管理系统";
     private static final String PROJECT_BASE_DIR = getProjectBaseDir();
 
     // ========== 配置，需要你手动修改 ==========
-    static final String GROUP_ID_NEW = "cn.fanstars.base";
+    static final String GROUP_ID_NEW = "cn.fanstars.idc-helper";
     static final String ARTIFACT_ID_NEW = "fan";
     static final String PACKAGE_NAME_NEW = "cn.fanstars";
     static final String TITLE_NEW = "基础管理系统";
@@ -139,7 +141,13 @@ public class ProjectReactor {
     private static void copyFile(File file, String projectBaseDir,
                                  String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
         String newPath = buildNewFilePath(file, projectBaseDir, projectBaseDirNew, packageNameNew, artifactIdNew);
-        FileUtil.copyFile(file, new File(newPath));
+        try {
+            FileUtil.copyFile(file, new File(newPath));
+        } catch (IORuntimeException e) {
+            if (e.causeInstanceOf(FileAlreadyExistsException.class)) {
+                log.error("[main][文件已存在，请自行处理 ({})]", newPath);
+            }
+        }
     }
 
     private static String buildNewFilePath(File file, String projectBaseDir,
