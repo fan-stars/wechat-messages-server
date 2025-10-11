@@ -42,7 +42,7 @@ public class FastjsonConverterFactory extends Converter.Factory {
                                                             @NotNull Retrofit retrofit) {
         return (Converter<ResponseBody, Object>) value -> {
             String responseString = "";
-            try {
+            try (value) {
                 responseString = value.string();
                 Object converterResponse = JSON.parseObject(responseString, type);
                 if (isCompareResult) {
@@ -58,8 +58,6 @@ public class FastjsonConverterFactory extends Converter.Factory {
             } catch (Exception e) {
                 log.info("responseBodyConverter is error: ", e);
                 return responseString;
-            } finally {
-                value.close();
             }
         };
     }
