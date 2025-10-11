@@ -2,9 +2,9 @@ package cn.fanstars.framework.common.biz.system.dict;
 
 import cn.fanstars.framework.common.biz.system.dict.dto.DictDataRespDTO;
 import cn.fanstars.framework.common.biz.system.dict.dto.DictTypeSaveReqDTO;
+import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
