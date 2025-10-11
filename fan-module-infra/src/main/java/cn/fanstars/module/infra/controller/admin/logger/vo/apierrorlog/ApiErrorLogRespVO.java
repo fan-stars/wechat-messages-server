@@ -3,8 +3,8 @@ package cn.fanstars.module.infra.controller.admin.logger.vo.apierrorlog;
 import cn.fanstars.framework.excel.core.annotations.DictFormat;
 import cn.fanstars.framework.excel.core.convert.DictConvert;
 import cn.fanstars.module.infra.enums.DictTypeConstants;
-import com.alibaba.excel.annotation.ExcelIgnoreUnannotated;
-import com.alibaba.excel.annotation.ExcelProperty;
+import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
+import cn.idev.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

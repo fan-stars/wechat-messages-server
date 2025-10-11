@@ -1,11 +1,18 @@
 package cn.fanstars.module.system.service.oauth2;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.enums.UserTypeEnum;
 import cn.fanstars.framework.common.exception.enums.GlobalErrorCodeConstants;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.date.DateUtils;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.security.core.LoginUser;
+import cn.fanstars.framework.tenant.core.context.TenantContextHolder;
+import cn.fanstars.framework.tenant.core.util.TenantUtils;
 import cn.fanstars.module.system.controller.admin.oauth2.vo.token.OAuth2AccessTokenPageReqVO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
@@ -15,16 +22,11 @@ import cn.fanstars.module.system.dal.mysql.oauth2.OAuth2AccessTokenMapper;
 import cn.fanstars.module.system.dal.mysql.oauth2.OAuth2RefreshTokenMapper;
 import cn.fanstars.module.system.dal.redis.oauth2.OAuth2AccessTokenRedisDAO;
 import cn.fanstars.module.system.service.user.AdminUserService;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +38,7 @@ import static cn.fanstars.framework.common.util.collection.CollectionUtils.conve
 /**
  * OAuth2.0 Token Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class OAuth2TokenServiceImpl implements OAuth2TokenService {
@@ -163,6 +165,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
                 .setClientId(clientDO.getClientId()).setScopes(refreshTokenDO.getScopes())
                 .setRefreshToken(refreshTokenDO.getRefreshToken())
                 .setExpiresTime(LocalDateTime.now().plusSeconds(clientDO.getAccessTokenValiditySeconds()));
+        accessTokenDO.setTenantId(TenantContextHolder.getTenantId()); // 手动设置租户编号，避免缓存到 Redis 的时候，无对应的租户编号
         oauth2AccessTokenMapper.insert(accessTokenDO);
         // 记录到 Redis 中
         oauth2AccessTokenRedisDAO.set(accessTokenDO);
@@ -181,28 +184,31 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
     private OAuth2AccessTokenDO convertToAccessToken(OAuth2RefreshTokenDO refreshTokenDO) {
         OAuth2AccessTokenDO accessTokenDO = BeanUtils.toBean(refreshTokenDO, OAuth2AccessTokenDO.class)
                 .setAccessToken(refreshTokenDO.getRefreshToken());
-//        TenantUtils.execute(refreshTokenDO.getTenantId(),
-//                        () -> accessTokenDO.setUserInfo(buildUserInfo(refreshTokenDO.getUserId(), refreshTokenDO.getUserType())));
+        TenantUtils.execute(refreshTokenDO.getTenantId(),
+                        () -> accessTokenDO.setUserInfo(buildUserInfo(refreshTokenDO.getUserId(), refreshTokenDO.getUserType())));
         return accessTokenDO;
     }
 
     /**
-     * 加载用户信息，方便 {@link LoginUser} 获取到昵称、部门等信息
+     * 加载用户信息，方便 {@link cn.fanstars.framework.security.core.LoginUser} 获取到昵称、部门等信息
      *
      * @param userId 用户编号
      * @param userType 用户类型
      * @return 用户信息
      */
     private Map<String, String> buildUserInfo(Long userId, Integer userType) {
+        if (userId == null || userId <= 0) {
+            return Collections.emptyMap();
+        }
         if (userType.equals(UserTypeEnum.ADMIN.getValue())) {
             AdminUserDO user = adminUserService.getUser(userId);
             return MapUtil.builder(LoginUser.INFO_KEY_NICKNAME, user.getNickname())
-                    .build();
+                    .put(LoginUser.INFO_KEY_DEPT_ID, StrUtil.toStringOrNull(user.getDeptId())).build();
         } else if (userType.equals(UserTypeEnum.MEMBER.getValue())) {
             // 注意：目前 Member 暂时不读取，可以按需实现
             return Collections.emptyMap();
         }
-        return null;
+        throw new IllegalArgumentException("未知用户类型：" + userType);
     }
 
     private static String generateAccessToken() {

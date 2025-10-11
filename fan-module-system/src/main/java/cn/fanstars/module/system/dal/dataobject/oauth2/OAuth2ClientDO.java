@@ -2,6 +2,7 @@ package cn.fanstars.module.system.dal.dataobject.oauth2;
 
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
 import cn.fanstars.framework.mybatis.core.dataobject.BaseDO;
+import cn.fanstars.framework.tenant.core.aop.TenantIgnore;
 import cn.fanstars.module.system.enums.oauth2.OAuth2GrantTypeEnum;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -16,12 +17,13 @@ import java.util.List;
 /**
  * OAuth2 客户端 DO
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @TableName(value = "system_oauth2_client", autoResultMap = true)
 @KeySequence("system_oauth2_client_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TenantIgnore
 public class OAuth2ClientDO extends BaseDO {
 
     /**

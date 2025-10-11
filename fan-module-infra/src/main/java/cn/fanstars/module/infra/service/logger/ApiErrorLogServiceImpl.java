@@ -4,15 +4,17 @@ import cn.fanstars.framework.common.biz.infra.logger.dto.ApiErrorLogCreateReqDTO
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.common.util.string.StrUtils;
+import cn.fanstars.framework.tenant.core.context.TenantContextHolder;
+import cn.fanstars.framework.tenant.core.util.TenantUtils;
 import cn.fanstars.module.infra.controller.admin.logger.vo.apierrorlog.ApiErrorLogPageReqVO;
 import cn.fanstars.module.infra.dal.dataobject.logger.ApiErrorLogDO;
 import cn.fanstars.module.infra.dal.mysql.logger.ApiErrorLogMapper;
 import cn.fanstars.module.infra.enums.logger.ApiErrorLogProcessStatusEnum;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Resource;
 import java.time.LocalDateTime;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -23,7 +25,7 @@ import static cn.fanstars.module.infra.enums.ErrorCodeConstants.API_ERROR_LOG_PR
 /**
  * API 错误日志 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Validated
@@ -38,7 +40,17 @@ public class ApiErrorLogServiceImpl implements ApiErrorLogService {
         ApiErrorLogDO apiErrorLog = BeanUtils.toBean(createDTO, ApiErrorLogDO.class)
                 .setProcessStatus(ApiErrorLogProcessStatusEnum.INIT.getStatus());
         apiErrorLog.setRequestParams(StrUtils.maxLength(apiErrorLog.getRequestParams(), REQUEST_PARAMS_MAX_LENGTH));
-        apiErrorLogMapper.insert(apiErrorLog);
+        try {
+            if (TenantContextHolder.getTenantId() != null) {
+                apiErrorLogMapper.insert(apiErrorLog);
+            } else {
+                // 极端情况下，上下文中没有租户时，此时忽略租户上下文，避免插入失败！
+                TenantUtils.executeIgnore(() -> apiErrorLogMapper.insert(apiErrorLog));
+            }
+        } catch (Exception ex) {
+            // 兜底处理，目前只有 fan-cloud 会发生：https://gitee.com/fancode/fan-cloud-mini/issues/IC1O0A
+            log.error("[createApiErrorLog][记录时({}) 发生异常]", createDTO, ex);
+        }
     }
 
     @Override

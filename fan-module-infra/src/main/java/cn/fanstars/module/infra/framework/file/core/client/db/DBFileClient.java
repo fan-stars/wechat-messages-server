@@ -1,10 +1,10 @@
 package cn.fanstars.module.infra.framework.file.core.client.db;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.fanstars.module.infra.dal.dataobject.file.FileContentDO;
 import cn.fanstars.module.infra.dal.mysql.file.FileContentMapper;
 import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.extra.spring.SpringUtil;
 
 import java.util.Comparator;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * 基于 DB 存储的文件客户端的配置类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class DBFileClient extends AbstractFileClient<DBFileClientConfig> {
 

@@ -6,21 +6,23 @@ import cn.fanstars.framework.common.pojo.PageParam;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.excel.core.util.ExcelUtils;
+import cn.fanstars.framework.translate.core.TranslateUtils;
 import cn.fanstars.module.system.controller.admin.logger.vo.operatelog.OperateLogPageReqVO;
 import cn.fanstars.module.system.controller.admin.logger.vo.operatelog.OperateLogRespVO;
 import cn.fanstars.module.system.dal.dataobject.logger.OperateLogDO;
 import cn.fanstars.module.system.service.logger.OperateLogService;
+import com.fhs.core.trans.anno.TransMethodResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 
@@ -39,20 +41,21 @@ public class OperateLogController {
     @GetMapping("/page")
     @Operation(summary = "查看操作日志分页列表")
     @PreAuthorize("@ss.hasPermission('system:operate-log:query')")
+    @TransMethodResult
     public CommonResult<PageResult<OperateLogRespVO>> pageOperateLog(@Valid OperateLogPageReqVO pageReqVO) {
         PageResult<OperateLogDO> pageResult = operateLogService.getOperateLogPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, OperateLogRespVO.class));
     }
 
     @Operation(summary = "导出操作日志")
-    @GetMapping("/export")
+    @GetMapping("/export-excel")
     @PreAuthorize("@ss.hasPermission('system:operate-log:export')")
     @ApiAccessLog(operateType = EXPORT)
     public void exportOperateLog(HttpServletResponse response, @Valid OperateLogPageReqVO exportReqVO) throws IOException {
         exportReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
         List<OperateLogDO> list = operateLogService.getOperateLogPage(exportReqVO).getList();
         ExcelUtils.write(response, "操作日志.xls", "数据列表", OperateLogRespVO.class,
-                BeanUtils.toBean(list, OperateLogRespVO.class));
+                TranslateUtils.translate(BeanUtils.toBean(list, OperateLogRespVO.class)));
     }
 
 }

@@ -3,14 +3,14 @@ package cn.fanstars.module.system.service.auth;
 import cn.fanstars.module.system.controller.admin.auth.vo.*;
 import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 管理后台的认证 Service 接口
  *
  * 提供用户的登录、登出的能力
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface AdminAuthService {
 
@@ -53,6 +53,14 @@ public interface AdminAuthService {
      * @return 登录结果
      */
     AuthLoginRespVO smsLogin(AuthSmsLoginReqVO reqVO);
+
+    /**
+     * 社交快捷登录，使用 code 授权码
+     *
+     * @param reqVO 登录信息
+     * @return 登录结果
+     */
+    AuthLoginRespVO socialLogin(@Valid AuthSocialLoginReqVO reqVO);
 
     /**
      * 刷新访问令牌

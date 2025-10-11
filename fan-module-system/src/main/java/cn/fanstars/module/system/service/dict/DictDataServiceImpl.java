@@ -1,5 +1,6 @@
 package cn.fanstars.module.system.service.dict;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.collection.CollectionUtils;
@@ -9,12 +10,11 @@ import cn.fanstars.module.system.controller.admin.dict.vo.data.DictDataSaveReqVO
 import cn.fanstars.module.system.dal.dataobject.dict.DictDataDO;
 import cn.fanstars.module.system.dal.dataobject.dict.DictTypeDO;
 import cn.fanstars.module.system.dal.mysql.dict.DictDataMapper;
-import cn.hutool.core.collection.CollUtil;
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -96,6 +96,11 @@ public class DictDataServiceImpl implements DictDataService {
 
         // 删除字典数据
         dictDataMapper.deleteById(id);
+    }
+
+    @Override
+    public void deleteDictDataList(List<Long> ids) {
+        dictDataMapper.deleteByIds(ids);
     }
 
     @Override

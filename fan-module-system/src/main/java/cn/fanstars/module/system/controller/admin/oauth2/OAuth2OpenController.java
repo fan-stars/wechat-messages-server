@@ -1,5 +1,9 @@
 package cn.fanstars.module.system.controller.admin.oauth2;
 
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.enums.UserTypeEnum;
 import cn.fanstars.framework.common.pojo.CommonResult;
 import cn.fanstars.framework.common.util.http.HttpUtils;
@@ -17,21 +21,17 @@ import cn.fanstars.module.system.service.oauth2.OAuth2ClientService;
 import cn.fanstars.module.system.service.oauth2.OAuth2GrantService;
 import cn.fanstars.module.system.service.oauth2.OAuth2TokenService;
 import cn.fanstars.module.system.util.oauth2.OAuth2Utils;
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
-import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,7 @@ import static cn.fanstars.framework.security.core.util.SecurityFrameworkUtils.ge
  * 考虑到【本系统】暂时不想做的过于复杂，默认只有获取到 access token 之后，可以访问【本系统】管理后台的 /system-api/* 所有接口，除非手动添加 scope 控制。
  * scope 的使用示例，可见 {@link OAuth2UserController} 类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Tag(name = "管理后台 - OAuth2.0 授权")
 @RestController
@@ -94,6 +94,7 @@ public class OAuth2OpenController {
             @Parameter(name = "scope", example = "user_info"),
             @Parameter(name = "refresh_token", example = "123424233"),
     })
+    @SuppressWarnings("EnhancedSwitchMigration")
     public CommonResult<OAuth2OpenAccessTokenRespVO> postAccessToken(HttpServletRequest request,
                                                                      @RequestParam("grant_type") String grantType,
                                                                      @RequestParam(value = "code", required = false) String code, // 授权码模式

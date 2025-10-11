@@ -1,16 +1,17 @@
 package cn.fanstars.module.system.api.permission;
 
+import cn.fanstars.framework.common.biz.system.permission.dto.DeptDataPermissionRespDTO;
 import cn.fanstars.module.system.service.permission.PermissionService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collection;
 import java.util.Set;
 
 /**
  * 权限 API 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class PermissionApiImpl implements PermissionApi {
@@ -31,6 +32,11 @@ public class PermissionApiImpl implements PermissionApi {
     @Override
     public boolean hasAnyRoles(Long userId, String... roles) {
         return permissionService.hasAnyRoles(userId, roles);
+    }
+
+    @Override
+    public DeptDataPermissionRespDTO getDeptDataPermission(Long userId) {
+        return permissionService.getDeptDataPermission(userId);
     }
 
 }

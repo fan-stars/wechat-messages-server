@@ -3,9 +3,9 @@ package cn.fanstars.module.system.controller.admin.permission.vo.menu;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Schema(description = "管理后台 - 菜单信息 Response VO")
@@ -15,7 +15,7 @@ public class MenuRespVO {
     @Schema(description = "菜单编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "1024")
     private Long id;
 
-    @Schema(description = "菜单名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋道")
+    @Schema(description = "菜单名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "繁星")
     @NotBlank(message = "菜单名称不能为空")
     @Size(max = 50, message = "菜单名称长度不能超过50个字符")
     private String name;

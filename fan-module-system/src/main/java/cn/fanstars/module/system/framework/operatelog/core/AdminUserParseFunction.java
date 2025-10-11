@@ -1,14 +1,13 @@
 package cn.fanstars.module.system.framework.operatelog.core;
 
-import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
-import cn.fanstars.module.system.service.user.AdminUserService;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
+import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
+import cn.fanstars.module.system.service.user.AdminUserService;
 import com.mzt.logapi.service.IParseFunction;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * 管理员名字的 {@link IParseFunction} 实现类
@@ -41,7 +40,7 @@ public class AdminUserParseFunction implements IParseFunction {
             log.warn("[apply][获取用户{{}}为空", value);
             return "";
         }
-        // 返回格式 芋道源码(13888888888)
+        // 返回格式 繁星源码(13888888888)
         String nickname = user.getNickname();
         if (StrUtil.isEmpty(user.getMobile())) {
             return nickname;

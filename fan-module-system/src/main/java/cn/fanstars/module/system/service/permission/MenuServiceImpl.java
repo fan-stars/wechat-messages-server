@@ -1,5 +1,8 @@
 package cn.fanstars.module.system.service.permission;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
@@ -8,18 +11,17 @@ import cn.fanstars.module.system.dal.dataobject.permission.MenuDO;
 import cn.fanstars.module.system.dal.mysql.permission.MenuMapper;
 import cn.fanstars.module.system.dal.redis.RedisKeyConstants;
 import cn.fanstars.module.system.enums.permission.MenuTypeEnum;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.fanstars.module.system.service.tenant.TenantService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.*;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -31,7 +33,7 @@ import static cn.fanstars.module.system.enums.ErrorCodeConstants.*;
 /**
  * 菜单 Service 实现
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Slf4j
@@ -41,6 +43,9 @@ public class MenuServiceImpl implements MenuService {
     private MenuMapper menuMapper;
     @Resource
     private PermissionService permissionService;
+    @Resource
+    @Lazy // 延迟，避免循环依赖报错
+    private TenantService tenantService;
 
     @Override
     @CacheEvict(value = RedisKeyConstants.PERMISSION_MENU_ID_LIST, key = "#createReqVO.permission",
@@ -100,6 +105,24 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = RedisKeyConstants.PERMISSION_MENU_ID_LIST,
+            allEntries = true) // allEntries 清空所有缓存，因为 Spring Cache 不支持按照 ids 批量删除
+    public void deleteMenuList(List<Long> ids) {
+        // 校验是否还有子菜单
+        ids.forEach(id -> {
+            if (menuMapper.selectCountByParentId(id) > 0) {
+                throw exception(MENU_EXISTS_CHILDREN);
+            }
+        });
+
+        // 标记删除
+        menuMapper.deleteByIds(ids);
+        // 删除授予给角色的权限
+        ids.forEach(id -> permissionService.processMenuDeleted(id));
+    }
+
+    @Override
     public List<MenuDO> getMenuList() {
         return menuMapper.selectList();
     }
@@ -108,6 +131,8 @@ public class MenuServiceImpl implements MenuService {
     public List<MenuDO> getMenuListByTenant(MenuListReqVO reqVO) {
         // 查询所有菜单，并过滤掉关闭的节点
         List<MenuDO> menus = getMenuList(reqVO);
+        // 开启多租户的情况下，需要过滤掉未开通的菜单
+        tenantService.handleTenantMenu(menuIds -> menus.removeIf(menu -> !CollUtil.contains(menuIds, menu.getId())));
         return menus;
     }
 
@@ -180,7 +205,7 @@ public class MenuServiceImpl implements MenuService {
         if (CollUtil.isEmpty(ids)) {
             return Lists.newArrayList();
         }
-        return menuMapper.selectBatchIds(ids);
+        return menuMapper.selectByIds(ids);
     }
 
     /**
@@ -230,9 +255,6 @@ public class MenuServiceImpl implements MenuService {
             return;
         }
         // 如果 id 为空，说明不用比较是否为相同 id 的菜单
-        if (id == null) {
-            throw exception(MENU_NAME_DUPLICATE);
-        }
         if (!menu.getId().equals(id)) {
             throw exception(MENU_NAME_DUPLICATE);
         }

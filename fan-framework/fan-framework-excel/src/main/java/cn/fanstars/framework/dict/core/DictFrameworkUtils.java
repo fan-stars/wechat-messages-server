@@ -18,7 +18,7 @@ import static cn.fanstars.framework.common.util.collection.CollectionUtils.conve
 /**
  * 字典工具类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Slf4j
 public class DictFrameworkUtils {
@@ -76,4 +76,9 @@ public class DictFrameworkUtils {
         return dictData!= null ? dictData.getValue(): null;
     }
 
+    @SneakyThrows
+    public static List<String> getDictDataValueList(String dictType) {
+        List<DictDataRespDTO> dictDatas = GET_DICT_DATA_CACHE.get(dictType);
+        return convertList(dictDatas, DictDataRespDTO::getValue);
+    }
 }

@@ -1,13 +1,13 @@
 package cn.fanstars.module.system.dal.redis.oauth2;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.fanstars.framework.common.util.collection.CollectionUtils;
 import cn.fanstars.framework.common.util.json.JsonUtils;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
-import cn.hutool.core.date.LocalDateTimeUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
@@ -19,7 +19,7 @@ import static cn.fanstars.module.system.dal.redis.RedisKeyConstants.OAUTH2_ACCES
 /**
  * {@link OAuth2AccessTokenDO} 的 RedisDAO
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Repository
 public class OAuth2AccessTokenRedisDAO {

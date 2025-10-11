@@ -1,5 +1,6 @@
 package cn.fanstars.module.infra.framework.file.core.enums;
 
+import cn.hutool.core.util.ArrayUtil;
 import cn.fanstars.module.infra.framework.file.core.client.FileClient;
 import cn.fanstars.module.infra.framework.file.core.client.FileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.client.db.DBFileClient;
@@ -12,14 +13,13 @@ import cn.fanstars.module.infra.framework.file.core.client.s3.S3FileClient;
 import cn.fanstars.module.infra.framework.file.core.client.s3.S3FileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.client.sftp.SftpFileClient;
 import cn.fanstars.module.infra.framework.file.core.client.sftp.SftpFileClientConfig;
-import cn.hutool.core.util.ArrayUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * 文件存储器枚举
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @AllArgsConstructor
 @Getter

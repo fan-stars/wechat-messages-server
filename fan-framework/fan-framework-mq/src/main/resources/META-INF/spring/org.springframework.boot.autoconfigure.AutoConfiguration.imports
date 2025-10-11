@@ -1,0 +1,3 @@
+cn.fanstars.framework.mq.redis.config.FanRedisMQProducerAutoConfiguration
+cn.fanstars.framework.mq.redis.config.FanRedisMQConsumerAutoConfiguration
+cn.fanstars.framework.mq.rabbitmq.config.FanRabbitMQAutoConfiguration

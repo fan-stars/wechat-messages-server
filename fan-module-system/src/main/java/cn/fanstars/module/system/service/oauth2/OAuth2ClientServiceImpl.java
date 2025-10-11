@@ -1,5 +1,9 @@
 package cn.fanstars.module.system.service.oauth2;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
@@ -9,19 +13,16 @@ import cn.fanstars.module.system.controller.admin.oauth2.vo.client.OAuth2ClientS
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.fanstars.module.system.dal.mysql.oauth2.OAuth2ClientMapper;
 import cn.fanstars.module.system.dal.redis.RedisKeyConstants;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Resource;
 import java.util.Collection;
+import java.util.List;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.fanstars.module.system.enums.ErrorCodeConstants.*;
@@ -29,7 +30,7 @@ import static cn.fanstars.module.system.enums.ErrorCodeConstants.*;
 /**
  * OAuth2.0 Client Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Validated
@@ -70,6 +71,13 @@ public class OAuth2ClientServiceImpl implements OAuth2ClientService {
         validateOAuth2ClientExists(id);
         // 删除
         oauth2ClientMapper.deleteById(id);
+    }
+
+    @Override
+    @CacheEvict(cacheNames = RedisKeyConstants.OAUTH_CLIENT,
+            allEntries = true) // allEntries 清空所有缓存，因为 id 不是直接的缓存 key，不好清理
+    public void deleteOAuth2ClientList(List<Long> ids) {
+        oauth2ClientMapper.deleteByIds(ids);
     }
 
     private void validateOAuth2ClientExists(Long id) {

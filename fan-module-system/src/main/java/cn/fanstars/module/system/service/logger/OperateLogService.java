@@ -1,7 +1,7 @@
 package cn.fanstars.module.system.service.logger;
 
-import cn.fanstars.framework.common.biz.system.logger.dto.OperateLogCreateReqDTO;
 import cn.fanstars.framework.common.pojo.PageResult;
+import cn.fanstars.framework.common.biz.system.logger.dto.OperateLogCreateReqDTO;
 import cn.fanstars.module.system.api.logger.dto.OperateLogPageReqDTO;
 import cn.fanstars.module.system.controller.admin.logger.vo.operatelog.OperateLogPageReqVO;
 import cn.fanstars.module.system.dal.dataobject.logger.OperateLogDO;
@@ -9,7 +9,7 @@ import cn.fanstars.module.system.dal.dataobject.logger.OperateLogDO;
 /**
  * 操作日志 Service 接口
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface OperateLogService {
 

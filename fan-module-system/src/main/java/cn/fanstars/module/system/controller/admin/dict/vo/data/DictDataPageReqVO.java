@@ -7,14 +7,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 @Schema(description = "管理后台 - 字典类型分页列表 Request VO")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DictDataPageReqVO extends PageParam {
 
-    @Schema(description = "字典标签", example = "芋道")
+    @Schema(description = "字典标签", example = "繁星")
     @Size(max = 100, message = "字典标签长度不能超过100个字符")
     private String label;
 

@@ -1,5 +1,6 @@
 package cn.fanstars.module.system.service.user;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.collection.CollectionUtils;
 import cn.fanstars.module.system.controller.admin.auth.vo.AuthRegisterReqVO;
@@ -10,9 +11,8 @@ import cn.fanstars.module.system.controller.admin.user.vo.user.UserImportRespVO;
 import cn.fanstars.module.system.controller.admin.user.vo.user.UserPageReqVO;
 import cn.fanstars.module.system.controller.admin.user.vo.user.UserSaveReqVO;
 import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
-import cn.hutool.core.collection.CollUtil;
+import jakarta.validation.Valid;
 
-import javax.validation.Valid;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * 后台用户 Service 接口
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface AdminUserService {
 
@@ -96,6 +96,13 @@ public interface AdminUserService {
     void deleteUser(Long id);
 
     /**
+     * 批量删除用户
+     *
+     * @param ids 用户编号数组
+     */
+    void deleteUserList(List<Long> ids);
+
+    /**
      * 通过用户名查询用户
      *
      * @param username 用户名
@@ -126,6 +133,22 @@ public interface AdminUserService {
      * @return 用户对象信息
      */
     AdminUserDO getUser(Long id);
+
+    /**
+     * 获得指定部门的用户数组
+     *
+     * @param deptIds 部门数组
+     * @return 用户数组
+     */
+    List<AdminUserDO> getUserListByDeptIds(Collection<Long> deptIds);
+
+    /**
+     * 获得指定岗位的用户数组
+     *
+     * @param postIds 岗位数组
+     * @return 用户数组
+     */
+    List<AdminUserDO> getUserListByPostIds(Collection<Long> postIds);
 
     /**
      * 获得用户列表

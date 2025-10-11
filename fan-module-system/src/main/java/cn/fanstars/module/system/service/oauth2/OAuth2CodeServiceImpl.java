@@ -1,13 +1,13 @@
 package cn.fanstars.module.system.service.oauth2;
 
+import cn.hutool.core.util.IdUtil;
 import cn.fanstars.framework.common.util.date.DateUtils;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2CodeDO;
 import cn.fanstars.module.system.dal.mysql.oauth2.OAuth2CodeMapper;
-import cn.hutool.core.util.IdUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,7 +18,7 @@ import static cn.fanstars.module.system.enums.ErrorCodeConstants.OAUTH2_CODE_NOT
 /**
  * OAuth2.0 授权码 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Validated

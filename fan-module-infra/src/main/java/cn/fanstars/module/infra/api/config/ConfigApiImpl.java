@@ -2,15 +2,14 @@ package cn.fanstars.module.infra.api.config;
 
 import cn.fanstars.module.infra.dal.dataobject.config.ConfigDO;
 import cn.fanstars.module.infra.service.config.ConfigService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import javax.annotation.Resource;
 
 /**
  * 参数配置 API 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Validated

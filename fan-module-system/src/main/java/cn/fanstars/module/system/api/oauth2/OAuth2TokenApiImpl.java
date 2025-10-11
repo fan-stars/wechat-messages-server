@@ -1,21 +1,20 @@
 package cn.fanstars.module.system.api.oauth2;
 
 import cn.fanstars.framework.common.biz.system.oauth2.OAuth2TokenCommonApi;
+import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.common.biz.system.oauth2.dto.OAuth2AccessTokenCheckRespDTO;
 import cn.fanstars.framework.common.biz.system.oauth2.dto.OAuth2AccessTokenCreateReqDTO;
 import cn.fanstars.framework.common.biz.system.oauth2.dto.OAuth2AccessTokenRespDTO;
-import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.fanstars.module.system.service.oauth2.OAuth2TokenService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
+import jakarta.annotation.Resource;
 
 /**
  * OAuth2.0 Token API 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class OAuth2TokenApiImpl implements OAuth2TokenCommonApi {
@@ -26,7 +25,7 @@ public class OAuth2TokenApiImpl implements OAuth2TokenCommonApi {
     @Override
     public OAuth2AccessTokenRespDTO createAccessToken(OAuth2AccessTokenCreateReqDTO reqDTO) {
         OAuth2AccessTokenDO accessTokenDO = oauth2TokenService.createAccessToken(
-                reqDTO.getUserId(), reqDTO.getUserType(), reqDTO.getClientId(), new ArrayList<>());
+                reqDTO.getUserId(), reqDTO.getUserType(), reqDTO.getClientId(), reqDTO.getScopes());
         return BeanUtils.toBean(accessTokenDO, OAuth2AccessTokenRespDTO.class);
     }
 

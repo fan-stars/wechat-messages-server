@@ -1,29 +1,26 @@
 package cn.fanstars.module.system.service.oauth2;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Assert;
 import cn.fanstars.framework.common.util.date.DateUtils;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ApproveDO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.fanstars.module.system.dal.mysql.oauth2.OAuth2ApproveMapper;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.lang.Assert;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static cn.fanstars.framework.common.util.collection.CollectionUtils.convertSet;
 
 /**
  * OAuth2 批准 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Validated

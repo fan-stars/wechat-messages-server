@@ -2,12 +2,12 @@ package cn.fanstars.module.system.api.logger;
 
 import cn.fanstars.module.system.api.logger.dto.LoginLogCreateReqDTO;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 登录日志的 API 接口
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface LoginLogApi {
 

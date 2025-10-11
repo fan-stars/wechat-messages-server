@@ -2,15 +2,15 @@ package cn.fanstars.framework.xss.core.filter;
 
 import cn.fanstars.framework.xss.core.clean.XssCleaner;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Xss 请求 Wrapper
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class XssRequestWrapper extends HttpServletRequestWrapper {
 

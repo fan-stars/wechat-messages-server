@@ -1,0 +1,2 @@
+cn.fanstars.framework.tracer.config.FanTracerAutoConfiguration
+cn.fanstars.framework.tracer.config.FanMetricsAutoConfiguration

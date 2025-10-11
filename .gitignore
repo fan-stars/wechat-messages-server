@@ -7,7 +7,8 @@
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
-#*/src/test/**
+
+.flattened-pom.xml
 
 ######################################################################
 # IDE
@@ -38,16 +39,22 @@ nbdist/
 # Others
 *.log
 *.xml.versionsBackup
+*.swp
 
 !*/build/*.java
 !*/build/*.html
 !*/build/*.xml
 
-*.pdb
-/img/xy/gene/
+### JRebel ###
+rebel.xml
 
-bin/deploy-config.json
-fan-tools-idc-gateway/bin/deploy-config.json
+application-my.yaml
+
+/fan-ui-app/unpackage/
+**/.DS_Store
+
+*.pdb
+
 **/bootstrap-*.yaml
 **/application-*.yaml
 

@@ -5,13 +5,14 @@ import cn.fanstars.module.infra.controller.admin.file.vo.file.FileCreateReqVO;
 import cn.fanstars.module.infra.controller.admin.file.vo.file.FilePageReqVO;
 import cn.fanstars.module.infra.controller.admin.file.vo.file.FilePresignedUrlRespVO;
 import cn.fanstars.module.infra.dal.dataobject.file.FileDO;
+import jakarta.validation.constraints.NotEmpty;
 
-import javax.validation.constraints.NotEmpty;
+import java.util.List;
 
 /**
  * 文件 Service 接口
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface FileService {
 
@@ -36,14 +37,22 @@ public interface FileService {
                       String name, String directory, String type);
 
     /**
-     * 生成文件预签名地址信息
+     * 生成文件预签名地址信息，用于上传
      *
      * @param name      文件名
      * @param directory 目录
      * @return 预签名地址信息
      */
-    FilePresignedUrlRespVO getFilePresignedUrl(@NotEmpty(message = "文件名不能为空") String name,
-                                               String directory);
+    FilePresignedUrlRespVO presignPutUrl(@NotEmpty(message = "文件名不能为空") String name,
+                                         String directory);
+    /**
+     * 生成文件预签名地址信息，用于读取
+     *
+     * @param url 完整的文件访问地址
+     * @param expirationSeconds 访问有效期，单位秒
+     * @return 文件预签名地址
+     */
+    String presignGetUrl(String url, Integer expirationSeconds);
 
     /**
      * 创建文件
@@ -59,6 +68,13 @@ public interface FileService {
      * @param id 编号
      */
     void deleteFile(Long id) throws Exception;
+
+    /**
+     * 批量删除文件
+     *
+     * @param ids 编号列表
+     */
+    void deleteFileList(List<Long> ids) throws Exception;
 
     /**
      * 获得文件内容

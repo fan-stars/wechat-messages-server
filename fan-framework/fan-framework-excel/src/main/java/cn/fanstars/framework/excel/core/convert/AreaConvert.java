@@ -1,10 +1,13 @@
 package cn.fanstars.framework.excel.core.convert;
 
-import com.alibaba.excel.converters.Converter;
-import com.alibaba.excel.enums.CellDataTypeEnum;
-import com.alibaba.excel.metadata.GlobalConfiguration;
-import com.alibaba.excel.metadata.data.ReadCellData;
-import com.alibaba.excel.metadata.property.ExcelContentProperty;
+import cn.hutool.core.convert.Convert;
+import cn.fanstars.framework.ip.core.Area;
+import cn.fanstars.framework.ip.core.utils.AreaUtils;
+import cn.idev.excel.converters.Converter;
+import cn.idev.excel.enums.CellDataTypeEnum;
+import cn.idev.excel.metadata.GlobalConfiguration;
+import cn.idev.excel.metadata.data.ReadCellData;
+import cn.idev.excel.metadata.property.ExcelContentProperty;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,16 +32,15 @@ public class AreaConvert implements Converter<Object> {
     public Object convertToJavaData(ReadCellData readCellData, ExcelContentProperty contentProperty,
                                     GlobalConfiguration globalConfiguration) {
         // 解析地区编号
-//        String label = readCellData.getStringValue();
-//        Area area = AreaUtils.parseArea(label);
-//        if (area == null) {
-//            log.error("[convertToJavaData][label({}) 解析不掉]", label);
-//            return null;
-//        }
-//        // 将 value 转换成对应的属性
-//        Class<?> fieldClazz = contentProperty.getField().getType();
-//        return Convert.convert(fieldClazz, area.getId());
-        return null;
+        String label = readCellData.getStringValue();
+        Area area = AreaUtils.parseArea(label);
+        if (area == null) {
+            log.error("[convertToJavaData][label({}) 解析不掉]", label);
+            return null;
+        }
+        // 将 value 转换成对应的属性
+        Class<?> fieldClazz = contentProperty.getField().getType();
+        return Convert.convert(fieldClazz, area.getId());
     }
 
 }

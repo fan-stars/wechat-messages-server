@@ -1,17 +1,17 @@
 package cn.fanstars.module.system.service.oauth2;
 
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.enums.UserTypeEnum;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2CodeDO;
 import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
 import cn.fanstars.module.system.enums.ErrorCodeConstants;
 import cn.fanstars.module.system.service.auth.AdminAuthService;
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -19,7 +19,7 @@ import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.e
 /**
  * OAuth2 授予 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class OAuth2GrantServiceImpl implements OAuth2GrantService {
@@ -86,8 +86,8 @@ public class OAuth2GrantServiceImpl implements OAuth2GrantService {
 
     @Override
     public OAuth2AccessTokenDO grantClientCredentials(String clientId, List<String> scopes) {
-        // TODO 芋艿：项目中使用 OAuth2 解决的是三方应用的授权，内部的 SSO 等问题，所以暂时不考虑 client_credentials 这个场景
-        throw new UnsupportedOperationException("暂时不支持 client_credentials 授权模式");
+        // 特殊：https://yuanbao.tencent.com/bot/app/share/chat/wFj642xSZHHx
+        return oauth2TokenService.createAccessToken(0L, UserTypeEnum.ADMIN.getValue(), clientId, scopes);
     }
 
     @Override

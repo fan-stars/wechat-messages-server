@@ -1,5 +1,10 @@
 package cn.fanstars.module.system.service.permission;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.collection.CollectionUtils;
@@ -9,17 +14,14 @@ import cn.fanstars.module.system.controller.admin.permission.vo.role.RoleSaveReq
 import cn.fanstars.module.system.dal.dataobject.permission.RoleDO;
 import cn.fanstars.module.system.dal.mysql.permission.RoleMapper;
 import cn.fanstars.module.system.dal.redis.RedisKeyConstants;
+import cn.fanstars.module.system.enums.permission.DataScopeEnum;
 import cn.fanstars.module.system.enums.permission.RoleCodeEnum;
 import cn.fanstars.module.system.enums.permission.RoleTypeEnum;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.ObjUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import java.util.*;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -38,7 +39,7 @@ import static cn.fanstars.module.system.enums.LogRecordConstants.*;
 /**
  * 角色 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Slf4j
@@ -61,7 +62,8 @@ public class RoleServiceImpl implements RoleService {
         // 2. 插入到数据库
         RoleDO role = BeanUtils.toBean(createReqVO, RoleDO.class)
                 .setType(ObjectUtil.defaultIfNull(type, RoleTypeEnum.CUSTOM.getType()))
-                .setStatus(ObjUtil.defaultIfNull(createReqVO.getStatus(), CommonStatusEnum.ENABLE.getStatus()));
+                .setStatus(ObjUtil.defaultIfNull(createReqVO.getStatus(), CommonStatusEnum.ENABLE.getStatus()))
+                .setDataScope(DataScopeEnum.ALL.getScope()); // 默认可查看所有数据。原因是，可能一些项目不需要项目权限
         roleMapper.insert(role);
 
         // 3. 记录操作日志上下文
@@ -89,6 +91,20 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @CacheEvict(value = RedisKeyConstants.ROLE, key = "#id")
+    public void updateRoleDataScope(Long id, Integer dataScope, Set<Long> dataScopeDeptIds) {
+        // 校验是否可以更新
+        validateRoleForUpdate(id);
+
+        // 更新数据范围
+        RoleDO updateObject = new RoleDO();
+        updateObject.setId(id);
+        updateObject.setDataScope(dataScope);
+        updateObject.setDataScopeDeptIds(dataScopeDeptIds);
+        roleMapper.updateById(updateObject);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = RedisKeyConstants.ROLE, key = "#id")
     @LogRecord(type = SYSTEM_ROLE_TYPE, subType = SYSTEM_ROLE_DELETE_SUB_TYPE, bizNo = "{{#id}}",
@@ -104,6 +120,18 @@ public class RoleServiceImpl implements RoleService {
 
         // 3. 记录操作日志上下文
         LogRecordContext.putVariable("role", role);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteRoleList(List<Long> ids) {
+        // 1. 校验是否可以删除
+        ids.forEach(this::validateRoleForUpdate);
+
+        // 2.1 标记删除
+        roleMapper.deleteByIds(ids);
+        // 2.2 删除相关数据
+        ids.forEach(id -> permissionService.processRoleDeleted(id));
     }
 
     /**
@@ -184,7 +212,7 @@ public class RoleServiceImpl implements RoleService {
         if (CollectionUtil.isEmpty(ids)) {
             return Collections.emptyList();
         }
-        return roleMapper.selectBatchIds(ids);
+        return roleMapper.selectByIds(ids);
     }
 
     @Override
@@ -220,7 +248,7 @@ public class RoleServiceImpl implements RoleService {
             return;
         }
         // 获得角色信息
-        List<RoleDO> roles = roleMapper.selectBatchIds(ids);
+        List<RoleDO> roles = roleMapper.selectByIds(ids);
         Map<Long, RoleDO> roleMap = convertMap(roles, RoleDO::getId);
         // 校验
         ids.forEach(id -> {

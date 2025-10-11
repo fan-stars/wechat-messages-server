@@ -3,18 +3,18 @@ package cn.fanstars.framework.excel.core.convert;
 import cn.hutool.core.convert.Convert;
 import cn.fanstars.framework.dict.core.DictFrameworkUtils;
 import cn.fanstars.framework.excel.core.annotations.DictFormat;
-import com.alibaba.excel.converters.Converter;
-import com.alibaba.excel.enums.CellDataTypeEnum;
-import com.alibaba.excel.metadata.GlobalConfiguration;
-import com.alibaba.excel.metadata.data.ReadCellData;
-import com.alibaba.excel.metadata.data.WriteCellData;
-import com.alibaba.excel.metadata.property.ExcelContentProperty;
+import cn.idev.excel.converters.Converter;
+import cn.idev.excel.enums.CellDataTypeEnum;
+import cn.idev.excel.metadata.GlobalConfiguration;
+import cn.idev.excel.metadata.data.ReadCellData;
+import cn.idev.excel.metadata.data.WriteCellData;
+import cn.idev.excel.metadata.property.ExcelContentProperty;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Excel 数据字典转换器
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Slf4j
 public class DictConvert implements Converter<Object> {

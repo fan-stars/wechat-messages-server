@@ -1,13 +1,16 @@
 package cn.fanstars.module.system.convert.auth;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.fanstars.framework.common.util.object.BeanUtils;
+import cn.fanstars.module.system.api.sms.dto.code.SmsCodeSendReqDTO;
+import cn.fanstars.module.system.api.sms.dto.code.SmsCodeUseReqDTO;
+import cn.fanstars.module.system.api.social.dto.SocialUserBindReqDTO;
 import cn.fanstars.module.system.controller.admin.auth.vo.*;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.fanstars.module.system.dal.dataobject.permission.MenuDO;
 import cn.fanstars.module.system.dal.dataobject.permission.RoleDO;
 import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
 import cn.fanstars.module.system.enums.permission.MenuTypeEnum;
-import cn.hutool.core.collection.CollUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 import org.slf4j.LoggerFactory;
@@ -75,11 +78,11 @@ public interface AuthConvert {
         // 获得到所有的根节点
         return filterList(treeNodeMap.values(), node -> ID_ROOT.equals(node.getParentId()));
     }
-//
-//    SocialUserBindReqDTO convert(Long userId, Integer userType, AuthSocialLoginReqVO reqVO);
-//
-//    SmsCodeSendReqDTO convert(AuthSmsSendReqVO reqVO);
-//
-//    SmsCodeUseReqDTO convert(AuthSmsLoginReqVO reqVO, Integer scene, String usedIp);
+
+    SocialUserBindReqDTO convert(Long userId, Integer userType, AuthSocialLoginReqVO reqVO);
+
+    SmsCodeSendReqDTO convert(AuthSmsSendReqVO reqVO);
+
+    SmsCodeUseReqDTO convert(AuthSmsLoginReqVO reqVO, Integer scene, String usedIp);
 
 }

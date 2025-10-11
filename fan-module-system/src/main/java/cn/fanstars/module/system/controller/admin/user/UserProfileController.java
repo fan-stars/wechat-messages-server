@@ -1,23 +1,29 @@
 package cn.fanstars.module.system.controller.admin.user;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.fanstars.framework.common.pojo.CommonResult;
+import cn.fanstars.framework.datapermission.core.annotation.DataPermission;
 import cn.fanstars.module.system.controller.admin.user.vo.profile.UserProfileRespVO;
 import cn.fanstars.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.fanstars.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.fanstars.module.system.convert.user.UserConvert;
+import cn.fanstars.module.system.dal.dataobject.dept.DeptDO;
+import cn.fanstars.module.system.dal.dataobject.dept.PostDO;
 import cn.fanstars.module.system.dal.dataobject.permission.RoleDO;
 import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
+import cn.fanstars.module.system.service.dept.DeptService;
+import cn.fanstars.module.system.service.dept.PostService;
 import cn.fanstars.module.system.service.permission.PermissionService;
 import cn.fanstars.module.system.service.permission.RoleService;
 import cn.fanstars.module.system.service.user.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import javax.validation.Valid;
 import java.util.List;
 
 import static cn.fanstars.framework.common.pojo.CommonResult.success;
@@ -33,18 +39,27 @@ public class UserProfileController {
     @Resource
     private AdminUserService userService;
     @Resource
+    private DeptService deptService;
+    @Resource
+    private PostService postService;
+    @Resource
     private PermissionService permissionService;
     @Resource
     private RoleService roleService;
 
     @GetMapping("/get")
     @Operation(summary = "获得登录用户信息")
+    @DataPermission(enable = false) // 关闭数据权限，避免只查看自己时，查询不到部门。
     public CommonResult<UserProfileRespVO> getUserProfile() {
         // 获得用户基本信息
         AdminUserDO user = userService.getUser(getLoginUserId());
         // 获得用户角色
         List<RoleDO> userRoles = roleService.getRoleListFromCache(permissionService.getUserRoleIdListByUserId(user.getId()));
-        return success(UserConvert.INSTANCE.convert(user, userRoles));
+        // 获得部门信息
+        DeptDO dept = user.getDeptId() != null ? deptService.getDept(user.getDeptId()) : null;
+        // 获得岗位信息
+        List<PostDO> posts = CollUtil.isNotEmpty(user.getPostIds()) ? postService.getPostList(user.getPostIds()) : null;
+        return success(UserConvert.INSTANCE.convert(user, userRoles, dept, posts));
     }
 
     @PutMapping("/update")

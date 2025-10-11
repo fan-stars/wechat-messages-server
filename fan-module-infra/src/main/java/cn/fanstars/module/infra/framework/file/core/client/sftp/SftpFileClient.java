@@ -1,16 +1,16 @@
 package cn.fanstars.module.infra.framework.file.core.client.sftp;
 
-import cn.fanstars.framework.common.util.io.FileUtils;
-import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.extra.ssh.Sftp;
+import cn.fanstars.framework.common.util.io.FileUtils;
+import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
 
 import java.io.File;
 
 /**
  * Sftp 文件客户端
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class SftpFileClient extends AbstractFileClient<SftpFileClientConfig> {
 

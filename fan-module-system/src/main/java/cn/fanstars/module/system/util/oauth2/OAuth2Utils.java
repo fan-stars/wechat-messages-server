@@ -1,10 +1,10 @@
 package cn.fanstars.module.system.util.oauth2;
 
-import cn.fanstars.framework.common.util.http.HttpUtils;
-import cn.fanstars.framework.security.core.util.SecurityFrameworkUtils;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.fanstars.framework.common.util.http.HttpUtils;
+import cn.fanstars.framework.security.core.util.SecurityFrameworkUtils;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * OAuth2 相关的工具类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class OAuth2Utils {
 

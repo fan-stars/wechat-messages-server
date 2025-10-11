@@ -15,13 +15,13 @@ import cn.fanstars.module.system.service.permission.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -60,6 +60,15 @@ public class RoleController {
     @PreAuthorize("@ss.hasPermission('system:role:delete')")
     public CommonResult<Boolean> deleteRole(@RequestParam("id") Long id) {
         roleService.deleteRole(id);
+        return success(true);
+    }
+
+    @DeleteMapping("/delete-list")
+    @Operation(summary = "批量删除角色")
+    @Parameter(name = "ids", description = "编号列表", required = true)
+    @PreAuthorize("@ss.hasPermission('system:role:delete')")
+    public CommonResult<Boolean> deleteRoleList(@RequestParam("ids") List<Long> ids) {
+        roleService.deleteRoleList(ids);
         return success(true);
     }
 

@@ -1,6 +1,7 @@
 package cn.fanstars.module.infra.dal.dataobject.file;
 
 import cn.fanstars.framework.mybatis.core.dataobject.BaseDO;
+import cn.fanstars.framework.tenant.core.aop.TenantIgnore;
 import cn.fanstars.module.infra.framework.file.core.client.db.DBFileClient;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -12,7 +13,7 @@ import lombok.*;
  *
  * 专门用于存储 {@link DBFileClient} 的文件内容
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @TableName("infra_file_content")
 @KeySequence("infra_file_content_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
@@ -22,6 +23,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TenantIgnore
 public class FileContentDO extends BaseDO {
 
     /**

@@ -1,20 +1,19 @@
 package cn.fanstars.framework.web.core.filter;
 
 import cn.fanstars.framework.common.util.servlet.ServletUtils;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
  *  Request Body 缓存 Wrapper
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class CacheRequestBodyWrapper extends HttpServletRequestWrapper {
 
@@ -29,12 +28,22 @@ public class CacheRequestBodyWrapper extends HttpServletRequestWrapper {
     }
 
     @Override
-    public BufferedReader getReader() throws IOException {
+    public BufferedReader getReader() {
         return new BufferedReader(new InputStreamReader(this.getInputStream()));
     }
 
     @Override
-    public ServletInputStream getInputStream() throws IOException {
+    public int getContentLength() {
+        return body.length;
+    }
+
+    @Override
+    public long getContentLengthLong() {
+        return body.length;
+    }
+
+    @Override
+    public ServletInputStream getInputStream() {
         final ByteArrayInputStream inputStream = new ByteArrayInputStream(body);
         // 返回 ServletInputStream
         return new ServletInputStream() {

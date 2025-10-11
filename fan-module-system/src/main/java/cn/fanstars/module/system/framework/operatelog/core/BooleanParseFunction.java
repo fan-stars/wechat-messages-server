@@ -1,8 +1,8 @@
 package cn.fanstars.module.system.framework.operatelog.core;
 
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.dict.core.DictFrameworkUtils;
 import cn.fanstars.module.infra.enums.DictTypeConstants;
-import cn.hutool.core.util.StrUtil;
 import com.mzt.logapi.service.IParseFunction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

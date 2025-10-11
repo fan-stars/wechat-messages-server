@@ -1,14 +1,15 @@
 package cn.fanstars.module.infra.framework.file.core.client.local;
 
-import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
+import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
 
 import java.io.File;
 
 /**
  * 本地文件客户端
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class LocalFileClient extends AbstractFileClient<LocalFileClientConfig> {
 
@@ -38,7 +39,14 @@ public class LocalFileClient extends AbstractFileClient<LocalFileClientConfig> {
     @Override
     public byte[] getContent(String path) {
         String filePath = getFilePath(path);
-        return FileUtil.readBytes(filePath);
+        try {
+            return FileUtil.readBytes(filePath);
+        } catch (IORuntimeException ex) {
+            if (ex.getMessage().startsWith("File not exist:")) {
+                return null;
+            }
+            throw ex;
+        }
     }
 
     private String getFilePath(String path) {

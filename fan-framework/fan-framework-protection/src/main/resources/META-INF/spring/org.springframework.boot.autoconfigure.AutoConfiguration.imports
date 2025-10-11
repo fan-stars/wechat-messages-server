@@ -1,0 +1,4 @@
+cn.fanstars.framework.idempotent.config.FanIdempotentConfiguration
+cn.fanstars.framework.lock4j.config.FanLock4jConfiguration
+cn.fanstars.framework.ratelimiter.config.FanRateLimiterConfiguration
+cn.fanstars.framework.signature.config.FanApiSignatureAutoConfiguration

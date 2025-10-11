@@ -5,9 +5,9 @@ import cn.fanstars.framework.common.validation.InEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Schema(description = "管理后台 - 字典数据创建/修改 Request VO")
 @Data
@@ -20,7 +20,7 @@ public class DictDataSaveReqVO {
     @NotNull(message = "显示顺序不能为空")
     private Integer sort;
 
-    @Schema(description = "字典标签", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋道")
+    @Schema(description = "字典标签", requiredMode = Schema.RequiredMode.REQUIRED, example = "繁星")
     @NotBlank(message = "字典标签不能为空")
     @Size(max = 100, message = "字典标签长度不能超过100个字符")
     private String label;

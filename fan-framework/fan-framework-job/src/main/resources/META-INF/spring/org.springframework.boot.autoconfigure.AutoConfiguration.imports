@@ -1,0 +1,2 @@
+cn.fanstars.framework.quartz.config.FanQuartzAutoConfiguration
+cn.fanstars.framework.quartz.config.FanAsyncAutoConfiguration

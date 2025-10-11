@@ -1,5 +1,6 @@
 package cn.fanstars.module.system.convert.oauth2;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.fanstars.framework.common.core.KeyValue;
 import cn.fanstars.framework.common.enums.UserTypeEnum;
 import cn.fanstars.framework.common.util.collection.CollectionUtils;
@@ -12,7 +13,6 @@ import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ApproveDO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
 import cn.fanstars.module.system.util.oauth2.OAuth2Utils;
-import cn.hutool.core.date.LocalDateTimeUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

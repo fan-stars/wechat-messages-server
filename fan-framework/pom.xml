@@ -4,26 +4,42 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>cn.fanstars.base</groupId>
         <artifactId>fan-base</artifactId>
+        <groupId>cn.fanstars.base</groupId>
         <version>${revision}</version>
     </parent>
-
-    <artifactId>fan-framework</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>fan-framework-common</module>
-        <module>fan-framework-web-mybatis</module>
-        <module>fan-framework-web</module>
-        <module>fan-framework-web-security</module>
-        <module>fan-framework-excel</module>
+        <module>fan-common</module>
+        <module>fan-framework-mybatis</module>
         <module>fan-framework-redis</module>
+        <module>fan-framework-web</module>
+        <module>fan-framework-security</module>
+        <module>fan-framework-websocket</module>
+
+        <module>fan-framework-monitor</module>
+        <module>fan-framework-protection</module>
+        <module>fan-framework-job</module>
+        <module>fan-framework-mq</module>
+
+        <module>fan-framework-excel</module>
+
+        <module>fan-framework-biz-tenant</module>
+        <module>fan-framework-biz-data-permission</module>
+        <module>fan-framework-biz-ip</module>
     </modules>
 
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <artifactId>fan-framework</artifactId>
+    <description>
+        该包是技术组件，每个子包，代表一个组件。每个组件包括两部分：
+            1. core 包：是该组件的核心封装
+            2. config 包：是该组件基于 Spring 的配置
+
+        技术组件，也分成两类：
+            1. 框架组件：和我们熟悉的 MyBatis、Redis 等等的拓展
+            2. 业务组件：和业务相关的组件的封装，例如说数据字典、操作日志等等。
+        如果是业务组件，Maven 名字会包含 biz
+    </description>
+    <url>https://github.com/YunaiV/ruoyi-vue-pro</url>
 
 </project>

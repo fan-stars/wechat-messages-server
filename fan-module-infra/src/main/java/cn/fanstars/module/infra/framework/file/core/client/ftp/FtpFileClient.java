@@ -1,12 +1,12 @@
 package cn.fanstars.module.infra.framework.file.core.client.ftp;
 
-import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.ftp.Ftp;
 import cn.hutool.extra.ftp.FtpException;
 import cn.hutool.extra.ftp.FtpMode;
+import cn.fanstars.module.infra.framework.file.core.client.AbstractFileClient;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Ftp 文件客户端
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public class FtpFileClient extends AbstractFileClient<FtpFileClientConfig> {
 

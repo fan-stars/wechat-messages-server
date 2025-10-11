@@ -1,6 +1,7 @@
 package cn.fanstars.module.infra.dal.dataobject.config;
 
 import cn.fanstars.framework.mybatis.core.dataobject.BaseDO;
+import cn.fanstars.framework.tenant.core.aop.TenantIgnore;
 import cn.fanstars.module.infra.enums.config.ConfigTypeEnum;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -12,13 +13,14 @@ import lombok.ToString;
 /**
  * 参数配置表
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @TableName("infra_config")
 @KeySequence("infra_config_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
+@TenantIgnore
 public class ConfigDO extends BaseDO {
 
     /**

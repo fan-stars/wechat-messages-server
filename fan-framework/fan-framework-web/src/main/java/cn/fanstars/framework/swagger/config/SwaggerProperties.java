@@ -3,12 +3,12 @@ package cn.fanstars.framework.swagger.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 /**
  * Swagger 配置属性
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @ConfigurationProperties("fan.swagger")
 @Data

@@ -4,16 +4,17 @@ import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.module.system.controller.admin.oauth2.vo.client.OAuth2ClientPageReqVO;
 import cn.fanstars.module.system.controller.admin.oauth2.vo.client.OAuth2ClientSaveReqVO;
 import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2ClientDO;
+import jakarta.validation.Valid;
 
-import javax.validation.Valid;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * OAuth2.0 Client Service 接口
  *
  * 从功能上，和 JdbcClientDetailsService 的功能，提供客户端的操作
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface OAuth2ClientService {
 
@@ -38,6 +39,13 @@ public interface OAuth2ClientService {
      * @param id 编号
      */
     void deleteOAuth2Client(Long id);
+
+    /**
+     * 批量删除 OAuth2 客户端
+     *
+     * @param ids 编号数组
+     */
+    void deleteOAuth2ClientList(List<Long> ids);
 
     /**
      * 获得 OAuth2 客户端

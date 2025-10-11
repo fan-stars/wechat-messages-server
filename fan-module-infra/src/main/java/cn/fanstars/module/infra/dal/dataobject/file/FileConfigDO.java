@@ -1,7 +1,9 @@
 package cn.fanstars.module.infra.dal.dataobject.file;
 
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.util.json.JsonUtils;
 import cn.fanstars.framework.mybatis.core.dataobject.BaseDO;
+import cn.fanstars.framework.tenant.core.aop.TenantIgnore;
 import cn.fanstars.module.infra.framework.file.core.client.FileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.client.db.DBFileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.client.ftp.FtpFileClientConfig;
@@ -9,7 +11,6 @@ import cn.fanstars.module.infra.framework.file.core.client.local.LocalFileClient
 import cn.fanstars.module.infra.framework.file.core.client.s3.S3FileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.client.sftp.SftpFileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.enums.FileStorageEnum;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -22,7 +23,7 @@ import java.lang.reflect.Field;
 /**
  * 文件配置表
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @TableName(value = "infra_file_config", autoResultMap = true)
 @KeySequence("infra_file_config_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
@@ -32,6 +33,7 @@ import java.lang.reflect.Field;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TenantIgnore
 public class FileConfigDO extends BaseDO {
 
     /**
@@ -77,7 +79,7 @@ public class FileConfigDO extends BaseDO {
 
         @Override
         public Object parse(String json) {
-            FileClientConfig config = JsonUtils.parseObjectQuietly(json, new TypeReference<FileClientConfig>() {
+            FileClientConfig config = JsonUtils.parseObjectQuietly(json, new TypeReference<>() {
             });
             if (config != null) {
                 return config;

@@ -3,8 +3,8 @@ package cn.fanstars.module.system.controller.admin.dict.vo.data;
 import cn.fanstars.framework.excel.core.annotations.DictFormat;
 import cn.fanstars.framework.excel.core.convert.DictConvert;
 import cn.fanstars.module.system.enums.DictTypeConstants;
-import com.alibaba.excel.annotation.ExcelIgnoreUnannotated;
-import com.alibaba.excel.annotation.ExcelProperty;
+import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
+import cn.idev.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -23,7 +23,7 @@ public class DictDataRespVO {
     @ExcelProperty("字典排序")
     private Integer sort;
 
-    @Schema(description = "字典标签", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋道")
+    @Schema(description = "字典标签", requiredMode = Schema.RequiredMode.REQUIRED, example = "繁星")
     @ExcelProperty("字典标签")
     private String label;
 

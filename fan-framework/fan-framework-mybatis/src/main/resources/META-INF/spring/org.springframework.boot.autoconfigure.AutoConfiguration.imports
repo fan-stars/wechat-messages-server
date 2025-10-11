@@ -1,0 +1,3 @@
+cn.fanstars.framework.datasource.config.FanDataSourceAutoConfiguration
+cn.fanstars.framework.mybatis.config.FanMybatisAutoConfiguration
+cn.fanstars.framework.translate.config.FanTranslateAutoConfiguration

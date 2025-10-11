@@ -1,5 +1,12 @@
 package cn.fanstars.framework.apilog.core.filter;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
+import cn.hutool.core.exceptions.ExceptionUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.apilog.core.annotation.ApiAccessLog;
 import cn.fanstars.framework.apilog.core.enums.OperateTypeEnum;
 import cn.fanstars.framework.common.biz.infra.logger.ApiAccessLogCommonApi;
@@ -9,26 +16,20 @@ import cn.fanstars.framework.common.pojo.CommonResult;
 import cn.fanstars.framework.common.util.json.JsonUtils;
 import cn.fanstars.framework.common.util.monitor.TracerUtils;
 import cn.fanstars.framework.common.util.servlet.ServletUtils;
+import cn.fanstars.framework.web.config.WebProperties;
+import cn.fanstars.framework.web.core.filter.ApiRequestFilter;
 import cn.fanstars.framework.web.core.util.WebFrameworkUtils;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.LocalDateTimeUtil;
-import cn.hutool.core.exceptions.ExceptionUtil;
-import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.method.HandlerMethod;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -43,10 +44,10 @@ import static cn.fanstars.framework.common.util.json.JsonUtils.toJsonString;
  *
  * 目的：记录 API 访问日志到数据库中
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Slf4j
-public class ApiAccessLogFilter extends OncePerRequestFilter {
+public class ApiAccessLogFilter extends ApiRequestFilter {
 
     private static final String[] SANITIZE_KEYS = new String[]{"password", "token", "accessToken", "refreshToken"};
 
@@ -54,7 +55,8 @@ public class ApiAccessLogFilter extends OncePerRequestFilter {
 
     private final ApiAccessLogCommonApi apiAccessLogApi;
 
-    public ApiAccessLogFilter(String applicationName, ApiAccessLogCommonApi apiAccessLogApi) {
+    public ApiAccessLogFilter(WebProperties webProperties, String applicationName, ApiAccessLogCommonApi apiAccessLogApi) {
+        super(webProperties);
         this.applicationName = applicationName;
         this.apiAccessLogApi = apiAccessLogApi;
     }
@@ -160,8 +162,7 @@ public class ApiAccessLogFilter extends OncePerRequestFilter {
     // ========== 解析 @ApiAccessLog、@Swagger 注解  ==========
 
     private static OperateTypeEnum parseOperateLogType(HttpServletRequest request) {
-        RequestMethod requestMethod = ArrayUtil.firstMatch(method ->
-                StrUtil.equalsAnyIgnoreCase(method.name(), request.getMethod()), RequestMethod.values());
+        RequestMethod requestMethod = RequestMethod.resolve(request.getMethod());
         if (requestMethod == null) {
             return OperateTypeEnum.OTHER;
         }
@@ -236,7 +237,7 @@ public class ApiAccessLogFilter extends OncePerRequestFilter {
             return;
         }
         //  情况三：Object，遍历处理
-        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.properties().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, JsonNode> entry = iterator.next();
             if (ArrayUtil.contains(sanitizeKeys, entry.getKey())

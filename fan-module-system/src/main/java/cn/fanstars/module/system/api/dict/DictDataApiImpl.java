@@ -1,19 +1,19 @@
 package cn.fanstars.module.system.api.dict;
 
-import cn.fanstars.framework.common.biz.system.dict.dto.DictDataRespDTO;
 import cn.fanstars.framework.common.util.object.BeanUtils;
+import cn.fanstars.framework.common.biz.system.dict.dto.DictDataRespDTO;
 import cn.fanstars.module.system.dal.dataobject.dict.DictDataDO;
 import cn.fanstars.module.system.service.dict.DictDataService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 
 /**
  * 字典数据 API 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class DictDataApiImpl implements DictDataApi {

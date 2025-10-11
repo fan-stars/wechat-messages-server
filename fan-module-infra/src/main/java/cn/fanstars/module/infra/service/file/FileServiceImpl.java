@@ -1,6 +1,12 @@
 package cn.fanstars.module.infra.service.file;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
+import cn.fanstars.framework.common.util.http.HttpUtils;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.module.infra.controller.admin.file.vo.file.FileCreateReqVO;
 import cn.fanstars.module.infra.controller.admin.file.vo.file.FilePageReqVO;
@@ -8,27 +14,22 @@ import cn.fanstars.module.infra.controller.admin.file.vo.file.FilePresignedUrlRe
 import cn.fanstars.module.infra.dal.dataobject.file.FileDO;
 import cn.fanstars.module.infra.dal.mysql.file.FileMapper;
 import cn.fanstars.module.infra.framework.file.core.client.FileClient;
-import cn.fanstars.module.infra.framework.file.core.client.s3.FilePresignedUrlRespDTO;
 import cn.fanstars.module.infra.framework.file.core.utils.FileTypeUtils;
-import cn.hutool.core.date.LocalDateTimeUtil;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.digest.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import java.util.List;
 
+import static cn.hutool.core.date.DatePattern.PURE_DATE_PATTERN;
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.fanstars.module.infra.enums.ErrorCodeConstants.FILE_NOT_EXISTS;
-import static cn.hutool.core.date.DatePattern.PURE_DATE_PATTERN;
 
 /**
  * 文件 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class FileServiceImpl implements FileService {
@@ -125,19 +126,27 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @SneakyThrows
-    public FilePresignedUrlRespVO getFilePresignedUrl(String name, String directory) {
+    public FilePresignedUrlRespVO presignPutUrl(String name, String directory) {
         // 1. 生成上传的 path，需要保证唯一
         String path = generateUploadPath(name, directory);
 
         // 2. 获取文件预签名地址
         FileClient fileClient = fileConfigService.getMasterFileClient();
-        FilePresignedUrlRespDTO presignedObjectUrl = fileClient.getPresignedObjectUrl(path);
-        return BeanUtils.toBean(presignedObjectUrl, FilePresignedUrlRespVO.class,
-                object -> object.setConfigId(fileClient.getId()).setPath(path));
+        String uploadUrl = fileClient.presignPutUrl(path);
+        String visitUrl = fileClient.presignGetUrl(path, null);
+        return new FilePresignedUrlRespVO().setConfigId(fileClient.getId())
+                .setPath(path).setUploadUrl(uploadUrl).setUrl(visitUrl);
+    }
+
+    @Override
+    public String presignGetUrl(String url, Integer expirationSeconds) {
+        FileClient fileClient = fileConfigService.getMasterFileClient();
+        return fileClient.presignGetUrl(url, expirationSeconds);
     }
 
     @Override
     public Long createFile(FileCreateReqVO createReqVO) {
+        createReqVO.setUrl(HttpUtils.removeUrlQuery(createReqVO.getUrl())); // 目的：移除私有桶情况下，URL 的签名参数
         FileDO file = BeanUtils.toBean(createReqVO, FileDO.class);
         fileMapper.insert(file);
         return file.getId();
@@ -155,6 +164,23 @@ public class FileServiceImpl implements FileService {
 
         // 删除记录
         fileMapper.deleteById(id);
+    }
+
+    @Override
+    @SneakyThrows
+    public void deleteFileList(List<Long> ids) {
+        // 删除文件
+        List<FileDO> files = fileMapper.selectByIds(ids);
+        for (FileDO file : files) {
+            // 获取客户端
+            FileClient client = fileConfigService.getFileClient(file.getConfigId());
+            Assert.notNull(client, "客户端({}) 不能为空", file.getPath());
+            // 删除文件
+            client.delete(file.getPath());
+        }
+
+        // 删除记录
+        fileMapper.deleteByIds(ids);
     }
 
     private FileDO validateFileExists(Long id) {

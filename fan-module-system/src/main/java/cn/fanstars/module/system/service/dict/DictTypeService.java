@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 字典类型 Service 接口
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface DictTypeService {
 
@@ -35,6 +35,13 @@ public interface DictTypeService {
      * @param id 字典类型编号
      */
     void deleteDictType(Long id);
+
+    /**
+     * 批量删除字典类型
+     *
+     * @param ids 字典类型编号列表
+     */
+    void deleteDictTypeList(List<Long> ids);
 
     /**
      * 获得字典类型分页列表

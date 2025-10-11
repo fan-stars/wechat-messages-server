@@ -1,7 +1,7 @@
 package cn.fanstars.module.system.dal.dataobject.user;
 
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
-import cn.fanstars.framework.mybatis.core.dataobject.BaseDO;
+import cn.fanstars.framework.tenant.core.db.TenantBaseDO;
 import cn.fanstars.module.system.enums.common.SexEnum;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * 管理后台的用户 DO
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @TableName(value = "system_users", autoResultMap = true) // 由于 SQL Server 的 system_user 是关键字，所以使用 system_users
 @KeySequence("system_users_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
@@ -26,7 +26,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminUserDO extends BaseDO {
+public class AdminUserDO extends TenantBaseDO {
 
     /**
      * 用户ID
@@ -51,6 +51,15 @@ public class AdminUserDO extends BaseDO {
      * 备注
      */
     private String remark;
+    /**
+     * 部门 ID
+     */
+    private Long deptId;
+    /**
+     * 岗位编号数组
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Set<Long> postIds;
     /**
      * 用户邮箱
      */

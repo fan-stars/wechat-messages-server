@@ -1,5 +1,7 @@
 package cn.fanstars.module.infra.service.file;
 
+import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.json.JsonUtils;
 import cn.fanstars.framework.common.util.validation.ValidationUtils;
@@ -12,19 +14,18 @@ import cn.fanstars.module.infra.framework.file.core.client.FileClient;
 import cn.fanstars.module.infra.framework.file.core.client.FileClientConfig;
 import cn.fanstars.module.infra.framework.file.core.client.FileClientFactory;
 import cn.fanstars.module.infra.framework.file.core.enums.FileStorageEnum;
-import cn.hutool.core.io.resource.ResourceUtil;
-import cn.hutool.core.util.IdUtil;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import jakarta.annotation.Resource;
+import jakarta.validation.Validator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Resource;
-import javax.validation.Validator;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -36,7 +37,7 @@ import static cn.fanstars.module.infra.enums.ErrorCodeConstants.FILE_CONFIG_NOT_
 /**
  * 文件配置 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 @Validated
@@ -132,6 +133,23 @@ public class FileConfigServiceImpl implements FileConfigService {
 
         // 清空缓存
         clearCache(id, null);
+    }
+
+    @Override
+    public void deleteFileConfigList(List<Long> ids) {
+        // 校验是否有主配置
+        List<FileConfigDO> configs = fileConfigMapper.selectByIds(ids);
+        for (FileConfigDO config : configs) {
+            if (Boolean.TRUE.equals(config.getMaster())) {
+                throw exception(FILE_CONFIG_DELETE_FAIL_MASTER);
+            }
+        }
+
+        // 批量删除
+        fileConfigMapper.deleteByIds(ids);
+
+        // 清空缓存
+        ids.forEach(id -> clearCache(id, null));
     }
 
     /**

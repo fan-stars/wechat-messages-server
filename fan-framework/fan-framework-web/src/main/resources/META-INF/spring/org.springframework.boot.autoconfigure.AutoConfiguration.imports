@@ -3,4 +3,5 @@ cn.fanstars.framework.jackson.config.FanJacksonAutoConfiguration
 cn.fanstars.framework.swagger.config.FanSwaggerAutoConfiguration
 cn.fanstars.framework.web.config.FanWebAutoConfiguration
 cn.fanstars.framework.xss.config.FanXssAutoConfiguration
-cn.fanstars.framework.cors.config.FanCorsAutoConfiguration
+cn.fanstars.framework.banner.config.FanBannerAutoConfiguration
+cn.fanstars.framework.encrypt.config.FanApiEncryptAutoConfiguration

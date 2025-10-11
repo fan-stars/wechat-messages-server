@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 菜单 Service 接口
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 public interface MenuService {
 
@@ -35,6 +35,13 @@ public interface MenuService {
      * @param id 菜单编号
      */
     void deleteMenu(Long id);
+
+    /**
+     * 批量删除菜单
+     *
+     * @param ids 菜单编号数组
+     */
+    void deleteMenuList(List<Long> ids);
 
     /**
      * 获得所有菜单列表

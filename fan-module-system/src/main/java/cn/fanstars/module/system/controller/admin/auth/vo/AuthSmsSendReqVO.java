@@ -2,14 +2,15 @@ package cn.fanstars.module.system.controller.admin.auth.vo;
 
 import cn.fanstars.framework.common.validation.InEnum;
 import cn.fanstars.framework.common.validation.Mobile;
+import cn.fanstars.module.system.enums.sms.SmsSceneEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "管理后台 - 发送手机验证码 Request VO")
 @Data
@@ -25,7 +26,7 @@ public class AuthSmsSendReqVO extends CaptchaVerificationReqVO {
 
     @Schema(description = "短信场景", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @NotNull(message = "发送场景不能为空")
-//    @InEnum(SmsSceneEnum.class)
+    @InEnum(SmsSceneEnum.class)
     private Integer scene;
 
 }

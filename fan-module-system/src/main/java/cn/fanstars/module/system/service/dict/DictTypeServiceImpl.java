@@ -1,5 +1,6 @@
 package cn.fanstars.module.system.service.dict;
 
+import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.date.LocalDateTimeUtils;
 import cn.fanstars.framework.common.util.object.BeanUtils;
@@ -7,11 +8,10 @@ import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypePageReqVO
 import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypeSaveReqVO;
 import cn.fanstars.module.system.dal.dataobject.dict.DictTypeDO;
 import cn.fanstars.module.system.dal.mysql.dict.DictTypeMapper;
-import cn.hutool.core.util.StrUtil;
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,7 +21,7 @@ import static cn.fanstars.module.system.enums.ErrorCodeConstants.*;
 /**
  * 字典类型 Service 实现类
  *
- * @author 芋道源码
+ * @author 繁星源码
  */
 @Service
 public class DictTypeServiceImpl implements DictTypeService {
@@ -85,6 +85,21 @@ public class DictTypeServiceImpl implements DictTypeService {
         }
         // 删除字典类型
         dictTypeMapper.updateToDelete(id, LocalDateTime.now());
+    }
+
+    @Override
+    public void deleteDictTypeList(List<Long> ids) {
+        // 1. 校验是否有字典数据
+        List<DictTypeDO> dictTypes = dictTypeMapper.selectByIds(ids);
+        dictTypes.forEach(dictType -> {
+            if (dictDataService.getDictDataCountByDictType(dictType.getType()) > 0) {
+                throw exception(DICT_TYPE_HAS_CHILDREN);
+            }
+        });
+
+        // 2. 批量删除字典类型
+        LocalDateTime now = LocalDateTime.now();
+        ids.forEach(id -> dictTypeMapper.updateToDelete(id, now));
     }
 
     @Override
