@@ -1,9 +1,9 @@
 package cn.fanstars.framework.retrofit2.config;
 
 import cn.fanstars.framework.common.util.spring.SpringUtils;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONWriter;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -46,8 +46,9 @@ public class FastjsonConverterFactory extends Converter.Factory {
                 responseString = value.string();
                 Object converterResponse = JSON.parseObject(responseString, type);
                 if (isCompareResult) {
-                    String originResult = JSON.toJSONString(JSONObject.parse(responseString), JSONWriter.Feature.MapSortField);
-                    String converterResult = JSON.toJSONString(converterResponse, JSONWriter.Feature.MapSortField);
+
+                    String originResult = JSON.toJSONString(JSONObject.parse(responseString), SerializerFeature.MapSortField);
+                    String converterResult = JSON.toJSONString(converterResponse, SerializerFeature.MapSortField);
                     if (!originResult.equals(converterResult)) {
                         log.info("originResult:    {}", originResult);
                         log.info("converterResult: {}", converterResult);
@@ -68,7 +69,7 @@ public class FastjsonConverterFactory extends Converter.Factory {
                                                           @NotNull Annotation[] methodAnnotations, @NotNull Retrofit retrofit) {
         return (Converter<Object, RequestBody>) value -> {
             String jsonString = JSON.toJSONString(value);
-            return RequestBody.create(jsonString, MediaType.parse("application/json; charset=UTF-8"));
+            return RequestBody.create(MediaType.parse("application/json; charset=UTF-8"), jsonString);
         };
     }
 }

@@ -76,6 +76,8 @@
         <jimureport.version>2.1.1</jimureport.version>
         <jimubi.version>2.1.0</jimubi.version>
         <weixin-java.version>4.7.7-20250808.182223</weixin-java.version>
+
+        <retrofit2.version>2.9.0</retrofit2.version>
     </properties>
 
     <dependencyManagement>
@@ -148,6 +150,12 @@
             <dependency>
                 <groupId>cn.fanstars.base</groupId>
                 <artifactId>fan-framework-websocket</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.fanstars.base</groupId>
+                <artifactId>fan-framework-retrofit2</artifactId>
                 <version>${revision}</version>
             </dependency>
 
@@ -645,6 +653,22 @@
                 <groupId>org.eclipse.paho</groupId>
                 <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
                 <version>${mqtt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>retrofit</artifactId>
+                <version>${retrofit2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>converter-jackson</artifactId>
+                <version>${retrofit2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>adapter-rxjava2</artifactId>
+                <version>${retrofit2.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

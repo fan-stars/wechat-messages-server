@@ -4,7 +4,7 @@ import cn.fanstars.framework.retrofit2.config.RetrofitCache;
 import cn.fanstars.framework.retrofit2.core.enums.CacheKeyConstants;
 import cn.fanstars.framework.retrofit2.core.pojo.ApiInfoDTO;
 import cn.hutool.crypto.digest.MD5;
-import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okio.Buffer;
