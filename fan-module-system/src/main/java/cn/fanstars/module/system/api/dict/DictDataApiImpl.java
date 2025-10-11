@@ -1,6 +1,5 @@
 package cn.fanstars.module.system.api.dict;
 
-import cn.fanstars.framework.common.biz.system.dict.dto.DictDataRespDTO;
 import cn.fanstars.framework.common.biz.system.dict.dto.DictTypeSaveReqDTO;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.common.biz.system.dict.dto.DictDataRespDTO;

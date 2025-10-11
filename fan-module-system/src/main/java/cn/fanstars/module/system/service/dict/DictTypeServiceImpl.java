@@ -1,6 +1,7 @@
 package cn.fanstars.module.system.service.dict;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.fanstars.framework.common.biz.system.dict.dto.DictTypeSaveReqDTO;
 import cn.fanstars.framework.common.enums.CommonStatusEnum;
 import cn.fanstars.framework.common.exception.ServiceException;
@@ -13,8 +14,6 @@ import cn.fanstars.module.system.controller.admin.dict.vo.type.DictTypeSaveReqVO
 import cn.fanstars.module.system.dal.dataobject.dict.DictDataDO;
 import cn.fanstars.module.system.dal.dataobject.dict.DictTypeDO;
 import cn.fanstars.module.system.dal.mysql.dict.DictTypeMapper;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
