@@ -36,8 +36,9 @@ public class FanProjectReactor {
             if (fileName.startsWith("《繁星") && fileName.endsWith("入门》.md")) {
                 boolean delete = FileUtil.del(file);
                 log.info("fileName: {}, delete: {}", fileName, delete);
+            } else {
+                updateFileContent(file, fileName);
             }
-            updateFileContent(file, fileName);
         });
 
         // 更新框架模块名称

@@ -210,3 +210,8 @@ fan:
     end-code: 9999 # 这里配置 9999 的原因是，测试方便。
 
 debug: false
+
+# 日志文件配置
+logging:
+  file:
+    name: ./logs/${spring.application.name}.log # 日志文件名，全路径
