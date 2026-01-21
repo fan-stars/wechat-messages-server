@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.fanstars.framework.mybatis.core.util.JdbcUtils;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenCreateListReqVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenDetailsJsonRespVO;
 import cn.fanstars.module.infra.controller.admin.codegen.vo.CodegenUpdateReqVO;
@@ -12,6 +13,7 @@ import cn.fanstars.module.infra.controller.admin.codegen.vo.table.CodegenTablePa
 import cn.fanstars.module.infra.controller.admin.codegen.vo.table.DatabaseTableRespVO;
 import cn.fanstars.module.infra.dal.dataobject.codegen.CodegenColumnDO;
 import cn.fanstars.module.infra.dal.dataobject.codegen.CodegenTableDO;
+import cn.fanstars.module.infra.dal.dataobject.db.DataSourceConfigDO;
 import cn.fanstars.module.infra.dal.mysql.codegen.CodegenColumnMapper;
 import cn.fanstars.module.infra.dal.mysql.codegen.CodegenTableMapper;
 import cn.fanstars.module.infra.enums.codegen.CodegenSceneEnum;
@@ -19,7 +21,9 @@ import cn.fanstars.module.infra.enums.codegen.CodegenTemplateTypeEnum;
 import cn.fanstars.module.infra.framework.codegen.config.CodegenProperties;
 import cn.fanstars.module.infra.service.codegen.inner.CodegenBuilder;
 import cn.fanstars.module.infra.service.codegen.inner.CodegenEngine;
+import cn.fanstars.module.infra.service.db.DataSourceConfigService;
 import cn.fanstars.module.infra.service.db.DatabaseTableService;
+import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.generator.config.po.TableField;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.google.common.annotations.VisibleForTesting;
@@ -49,6 +53,8 @@ public class CodegenServiceImpl implements CodegenService {
 
     @Resource
     private DatabaseTableService databaseTableService;
+    @Resource
+    private DataSourceConfigService dataSourceConfigService;
 
     @Resource
     private CodegenTableMapper codegenTableMapper;
@@ -327,8 +333,11 @@ public class CodegenServiceImpl implements CodegenService {
             }
         }
 
+        // 获取数据源对应的数据库类型
+        DataSourceConfigDO dataSourceConfig = dataSourceConfigService.getDataSourceConfig(table.getDataSourceConfigId());
+        DbType dbType = JdbcUtils.getDbType(dataSourceConfig.getUrl());
         // 执行生成
-        return codegenEngine.execute(table, columns, subTables, subColumnsList);
+        return codegenEngine.execute(dbType, table, columns, subTables, subColumnsList);
     }
 
     @Override

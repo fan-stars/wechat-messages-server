@@ -5,8 +5,10 @@ import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.module.system.api.sms.dto.code.SmsCodeSendReqDTO;
 import cn.fanstars.module.system.api.sms.dto.code.SmsCodeUseReqDTO;
 import cn.fanstars.module.system.api.social.dto.SocialUserBindReqDTO;
-import cn.fanstars.module.system.controller.admin.auth.vo.*;
-import cn.fanstars.module.system.dal.dataobject.oauth2.OAuth2AccessTokenDO;
+import cn.fanstars.module.system.controller.admin.auth.vo.AuthPermissionInfoRespVO;
+import cn.fanstars.module.system.controller.admin.auth.vo.AuthSmsLoginReqVO;
+import cn.fanstars.module.system.controller.admin.auth.vo.AuthSmsSendReqVO;
+import cn.fanstars.module.system.controller.admin.auth.vo.AuthSocialLoginReqVO;
 import cn.fanstars.module.system.dal.dataobject.permission.MenuDO;
 import cn.fanstars.module.system.dal.dataobject.permission.RoleDO;
 import cn.fanstars.module.system.dal.dataobject.user.AdminUserDO;
@@ -25,8 +27,6 @@ import static cn.fanstars.module.system.dal.dataobject.permission.MenuDO.ID_ROOT
 public interface AuthConvert {
 
     AuthConvert INSTANCE = Mappers.getMapper(AuthConvert.class);
-
-    AuthLoginRespVO convert(OAuth2AccessTokenDO bean);
 
     default AuthPermissionInfoRespVO convert(AdminUserDO user, List<RoleDO> roleList, List<MenuDO> menuList) {
         return AuthPermissionInfoRespVO.builder()
