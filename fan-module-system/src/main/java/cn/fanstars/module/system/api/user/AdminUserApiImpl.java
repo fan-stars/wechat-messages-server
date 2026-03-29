@@ -3,6 +3,7 @@ package cn.fanstars.module.system.api.user;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.fanstars.framework.common.util.object.BeanUtils;
+import cn.fanstars.framework.datapermission.core.annotation.DataPermission;
 import cn.fanstars.framework.datapermission.core.util.DataPermissionUtils;
 import cn.fanstars.module.system.api.user.dto.AdminUserRespDTO;
 import cn.fanstars.module.system.dal.dataobject.dept.DeptDO;
@@ -33,6 +34,7 @@ public class AdminUserApiImpl implements AdminUserApi {
     private DeptService deptService;
 
     @Override
+    @DataPermission(enable = false) // 忽略数据权限，避免因为过滤，导致无法查询用户。类似：https://github.com/YunaiV/ruoyi-vue-pro/issues/1051
     public AdminUserRespDTO getUser(Long id) {
         AdminUserDO user = userService.getUser(id);
         return BeanUtils.toBean(user, AdminUserRespDTO.class);
