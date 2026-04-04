@@ -197,10 +197,12 @@ export function useGridColumns(): VxeTableGridOptions<${apiName}.${simpleClassNa
   #set ($dictType = $column.dictType)
   #set ($javaField = $column.javaField)
   #set ($comment = $column.columnComment)
+  #set ($widthFlag = $column.colWidth > 0)
+  #set ($colWidth = $column.colWidth)
     {
       field: '${javaField}',
       title: '${comment}',
-      minWidth: 120,
+      minWidth: #if ($widthFlag)'${colWidth}'#else'120'#end,
   #if ($column.javaType == "LocalDateTime")## 时间类型
       formatter: 'formatDateTime',
   #elseif("" != $dictType)## 数据字典
