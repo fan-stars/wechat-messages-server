@@ -1,5 +1,6 @@
 package cn.fanstars.module.infra.api.config;
 
+import cn.fanstars.framework.common.biz.api.ConfigApi;
 import cn.fanstars.module.infra.dal.dataobject.config.ConfigDO;
 import cn.fanstars.module.infra.service.config.ConfigService;
 import jakarta.annotation.Resource;

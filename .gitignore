@@ -62,3 +62,32 @@ application-my.yaml
 **Controller.http
 *.log*.gz
 .temp/
+
+# Trae IDE 忽略规则
+.trae/settings.local.json
+.trae/logs/
+.trae/tmp/
+.trae/agents/
+.trae/skills/user_*
+.trae-cn/  # 国内版专属目录
+
+# Cursor IDE 忽略规则
+.cursor/settings.local.json
+.cursor/logs/
+.cursor/session/
+.cursorignore
+.cursor/tmp/
+
+# Claude Code 忽略规则
+.claude/settings.local.json
+.claude/logs/
+.claude/projects/
+.claude/agents/
+.claude/state/
+.claude/tmp/
+tmpclaude-*  # 根目录临时文件
+
+# 可选：团队共享文件（如需共享，请注释对应行）
+.trae/rules/project-rules.md
+.cursor/rules/
+.claude/settings.json

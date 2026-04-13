@@ -1,4 +1,4 @@
-package cn.fanstars.module.infra.api.config;
+package cn.fanstars.framework.common.biz.api;
 
 /**
  * 参数配置 API 接口

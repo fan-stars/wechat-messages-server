@@ -138,6 +138,11 @@
             <artifactId>easy-trans-anno</artifactId> <!-- 默认引入的原因，方便 xxx-module-api 包使用 -->
         </dependency>
 
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId> <!-- 文件客户端：解决 ftp 连接 -->
+        </dependency>
+
         <!-- Test 测试相关 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -12,7 +12,7 @@ import cn.fanstars.framework.common.util.collection.CollectionUtils;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.common.util.validation.ValidationUtils;
 import cn.fanstars.framework.datapermission.core.util.DataPermissionUtils;
-import cn.fanstars.module.infra.api.config.ConfigApi;
+import cn.fanstars.framework.common.biz.api.ConfigApi;
 import cn.fanstars.module.system.controller.admin.auth.vo.AuthRegisterReqVO;
 import cn.fanstars.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.fanstars.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
