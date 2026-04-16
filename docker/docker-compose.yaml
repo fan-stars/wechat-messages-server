@@ -1,0 +1,21 @@
+services:
+  spring-app:
+    build: ${DOCKER_FILE_DIR}
+    container_name: fan-base
+    ports:
+      - "${PORT}:48080"
+    volumes:
+      - ./config:/fan-server/config
+      - ./logs:/fan-server/logs
+    environment:
+      # https://github.com/polovyivan/docker-pass-configs-to-container
+      SPRING_PROFILES_ACTIVE: local
+      JAVA_OPTS:
+        ${JAVA_OPTS:-
+        -Xms512m
+        -Xmx512m
+        -Djava.security.egd=file:/dev/./urandom
+        }
+      ARGS:
+        --spring.application.name=fan-base
+    restart: unless-stopped
