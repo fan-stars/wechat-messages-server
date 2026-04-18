@@ -32,6 +32,7 @@ import cn.fanstars.module.infra.enums.codegen.CodegenFrontTypeEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenSceneEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenTemplateTypeEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenVOTypeEnum;
+import cn.fanstars.module.infra.framework.codegen.CodegenBusinessNameUtils;
 import cn.fanstars.module.infra.framework.codegen.config.CodegenProperties;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.google.common.annotations.VisibleForTesting;
@@ -557,14 +558,16 @@ public class CodegenEngine {
         // table 包含的字段
         CodegenTableDO table = (CodegenTableDO) bindingMap.get("table");
         filePath = StrUtil.replace(filePath, "${table.moduleName}", table.getModuleName());
-        filePath = StrUtil.replace(filePath, "${table.businessName}", table.getBusinessName());
+        filePath = StrUtil.replace(filePath, "${table.businessName}",
+                CodegenBusinessNameUtils.normalizeToPath(table.getBusinessName()));
         filePath = StrUtil.replace(filePath, "${table.className}", table.getClassName());
         // 特殊：主子表专属逻辑
         Integer subIndex = (Integer) bindingMap.get("subIndex");
         if (subIndex != null) {
             CodegenTableDO subTable = ((List<CodegenTableDO>) bindingMap.get("subTables")).get(subIndex);
             filePath = StrUtil.replace(filePath, "${subTable.moduleName}", subTable.getModuleName());
-            filePath = StrUtil.replace(filePath, "${subTable.businessName}", subTable.getBusinessName());
+            filePath = StrUtil.replace(filePath, "${subTable.businessName}",
+                    CodegenBusinessNameUtils.normalizeToPath(subTable.getBusinessName()));
             filePath = StrUtil.replace(filePath, "${subTable.className}", subTable.getClassName());
             filePath = StrUtil.replace(filePath, "${subSimpleClassName}",
                     ((List<String>) bindingMap.get("subSimpleClassNames")).get(subIndex));

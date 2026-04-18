@@ -1,4 +1,4 @@
-package ${basePackage}.module.${table.moduleName}.service.${table.businessName};
+package ${basePackage}.module.${table.moduleName}.service.${table.businessNamePackage};
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -8,21 +8,21 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import ${basePackage}.module.${table.moduleName}.controller.${sceneEnum.basePackage}.${table.businessName}.vo.*;
-import ${basePackage}.module.${table.moduleName}.dal.dataobject.${table.businessName}.${table.className}DO;
+import ${basePackage}.module.${table.moduleName}.controller.${sceneEnum.basePackage}.${table.businessNamePackage}.vo.*;
+import ${basePackage}.module.${table.moduleName}.dal.dataobject.${table.businessNamePackage}.${table.className}DO;
 ## 特殊：主子表专属逻辑
 #foreach ($subTable in $subTables)
-import ${basePackage}.module.${subTable.moduleName}.dal.dataobject.${subTable.businessName}.${subTable.className}DO;
+import ${basePackage}.module.${subTable.moduleName}.dal.dataobject.${subTable.businessNamePackage}.${subTable.className}DO;
 #end
 import ${PageResultClassName};
 import ${PageParamClassName};
 import ${BeanUtils};
 
-import ${basePackage}.module.${table.moduleName}.dal.mysql.${table.businessName}.${table.className}Mapper;
+import ${basePackage}.module.${table.moduleName}.dal.mysql.${table.businessNamePackage}.${table.className}Mapper;
 ## 特殊：主子表专属逻辑
 #foreach ($subTable in $subTables)
 #set ($index = $foreach.count - 1)
-import ${basePackage}.module.${subTable.moduleName}.dal.mysql.${subTable.businessName}.${subTable.className}Mapper;
+import ${basePackage}.module.${subTable.moduleName}.dal.mysql.${subTable.businessNamePackage}.${subTable.className}Mapper;
 #end
 
 import static ${ServiceExceptionUtilClassName}.exception;

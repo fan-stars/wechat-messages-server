@@ -1,4 +1,4 @@
-package ${basePackage}.module.${table.moduleName}.controller.${sceneEnum.basePackage}.${table.businessName};
+package ${basePackage}.module.${table.moduleName}.controller.${sceneEnum.basePackage}.${table.businessNamePackage};
 
 import org.springframework.web.bind.annotation.*;
 import ${jakartaPackage}.annotation.Resource;
@@ -26,17 +26,17 @@ import ${ExcelUtilsClassName};
 import ${ApiAccessLogClassName};
 import static ${OperateTypeEnumClassName}.*;
 
-import ${basePackage}.module.${table.moduleName}.controller.${sceneEnum.basePackage}.${table.businessName}.vo.*;
-import ${basePackage}.module.${table.moduleName}.dal.dataobject.${table.businessName}.${table.className}DO;
+import ${basePackage}.module.${table.moduleName}.controller.${sceneEnum.basePackage}.${table.businessNamePackage}.vo.*;
+import ${basePackage}.module.${table.moduleName}.dal.dataobject.${table.businessNamePackage}.${table.className}DO;
 ## 特殊：主子表专属逻辑
 #foreach ($subTable in $subTables)
-import ${basePackage}.module.${subTable.moduleName}.dal.dataobject.${subTable.businessName}.${subTable.className}DO;
+import ${basePackage}.module.${subTable.moduleName}.dal.dataobject.${subTable.businessNamePackage}.${subTable.className}DO;
 #end
-import ${basePackage}.module.${table.moduleName}.service.${table.businessName}.${table.className}Service;
+import ${basePackage}.module.${table.moduleName}.service.${table.businessNamePackage}.${table.className}Service;
 
 @Tag(name = "${sceneEnum.name} - ${table.classComment}")
 @RestController
-##二级的 businessName 暂时不算在 HTTP 路径上，可以根据需要写
+## 业务名多级（businessNamePackage）用于 Java 包路径；HTTP 路径仍主要为 /{module}/{resource}
 @RequestMapping("/${table.moduleName}/${simpleClassName_strikeCase}")
 @Validated
 public class ${sceneEnum.prefixClass}${table.className}Controller {

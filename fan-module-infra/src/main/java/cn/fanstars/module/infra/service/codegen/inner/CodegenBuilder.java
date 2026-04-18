@@ -10,6 +10,7 @@ import cn.fanstars.module.infra.dal.dataobject.codegen.CodegenTableDO;
 import cn.fanstars.module.infra.enums.codegen.CodegenColumnHtmlTypeEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenColumnListConditionEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenTemplateTypeEnum;
+import cn.fanstars.module.infra.framework.codegen.CodegenBusinessNameUtils;
 import com.baomidou.mybatisplus.generator.config.po.TableField;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.google.common.collect.Sets;
@@ -114,7 +115,8 @@ public class CodegenBuilder {
         // 第一步，_ 前缀的前面，作为 module 名字；第二步，moduleName 必须小写；
         table.setModuleName(subBefore(tableName, '_', false).toLowerCase());
         // 第一步，第一个 _ 前缀的后面，作为 module 名字; 第二步，可能存在多个 _ 的情况，转换成驼峰; 第三步，businessName 必须小写；
-        table.setBusinessName(toCamelCase(subAfter(tableName, '_', false)).toLowerCase());
+        table.setBusinessName(CodegenBusinessNameUtils.normalizeToPath(
+                toCamelCase(subAfter(tableName, '_', false)).toLowerCase()));
         // 驼峰 + 首字母大写；第一步，第一个 _ 前缀的后面，作为 class 名字；第二步，驼峰命名
         table.setClassName(upperFirst(toCamelCase(subAfter(tableName, '_', false))));
         // 去除结尾的表，作为类描述

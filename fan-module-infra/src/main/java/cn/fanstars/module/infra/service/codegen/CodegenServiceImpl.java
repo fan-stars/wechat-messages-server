@@ -18,6 +18,7 @@ import cn.fanstars.module.infra.dal.mysql.codegen.CodegenColumnMapper;
 import cn.fanstars.module.infra.dal.mysql.codegen.CodegenTableMapper;
 import cn.fanstars.module.infra.enums.codegen.CodegenSceneEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenTemplateTypeEnum;
+import cn.fanstars.module.infra.framework.codegen.CodegenBusinessNameUtils;
 import cn.fanstars.module.infra.framework.codegen.config.CodegenProperties;
 import cn.fanstars.module.infra.service.codegen.inner.CodegenBuilder;
 import cn.fanstars.module.infra.service.codegen.inner.CodegenEngine;
@@ -150,6 +151,7 @@ public class CodegenServiceImpl implements CodegenService {
 
         // 更新 table 表定义
         CodegenTableDO updateTableObj = BeanUtils.toBean(updateReqVO.getTable(), CodegenTableDO.class);
+        updateTableObj.setBusinessName(CodegenBusinessNameUtils.normalizeToPath(updateTableObj.getBusinessName()));
         codegenTableMapper.updateById(updateTableObj);
         // 更新 column 字段定义
         List<CodegenColumnDO> updateColumnObjs = BeanUtils.toBean(updateReqVO.getColumns(), CodegenColumnDO.class);

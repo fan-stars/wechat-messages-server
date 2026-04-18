@@ -6,6 +6,7 @@ import cn.fanstars.module.infra.dal.dataobject.db.DataSourceConfigDO;
 import cn.fanstars.module.infra.enums.codegen.CodegenFrontTypeEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenSceneEnum;
 import cn.fanstars.module.infra.enums.codegen.CodegenTemplateTypeEnum;
+import cn.fanstars.module.infra.framework.codegen.CodegenBusinessNameUtils;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -70,11 +71,19 @@ public class CodegenTableDO extends BaseDO {
      */
     private String moduleName;
     /**
-     * 业务名，即二级目录
+     * 业务名：一级或多级目录（存储与前端路径使用 {@code /} 分隔，如 {@code crm/customer}；也可输入 {@code crm.customer}，保存时会规范化）
      *
-     * 例如说，user、permission、dict 等等
+     * <p>生成 Java 包名请使用 {@link #getBusinessNamePackage()}。</p>
      */
     private String businessName;
+
+    /**
+     * Java package / import 中的业务名片段（多级时以 {@code .} 分隔）。
+     */
+    public String getBusinessNamePackage() {
+        return CodegenBusinessNameUtils.toPackage(
+                CodegenBusinessNameUtils.normalizeToPath(this.businessName));
+    }
     /**
      * 类名称（首字母大写）
      *

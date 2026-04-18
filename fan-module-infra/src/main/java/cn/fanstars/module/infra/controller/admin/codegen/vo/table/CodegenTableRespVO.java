@@ -27,7 +27,7 @@ public class CodegenTableRespVO {
     @Schema(description = "模块名", requiredMode = Schema.RequiredMode.REQUIRED, example = "system")
     private String moduleName;
 
-    @Schema(description = "业务名", requiredMode = Schema.RequiredMode.REQUIRED, example = "codegen")
+    @Schema(description = "业务名（多级可用 / 或 . 分隔）", requiredMode = Schema.RequiredMode.REQUIRED, example = "codegen")
     private String businessName;
 
     @Schema(description = "类名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "CodegenTable")

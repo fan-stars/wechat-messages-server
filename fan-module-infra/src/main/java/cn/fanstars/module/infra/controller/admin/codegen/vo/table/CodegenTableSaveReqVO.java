@@ -35,7 +35,8 @@ public class CodegenTableSaveReqVO {
     @NotNull(message = "模块名不能为空")
     private String moduleName;
 
-    @Schema(description = "业务名", requiredMode = Schema.RequiredMode.REQUIRED, example = "codegen")
+    @Schema(description = "业务名（多级目录可使用 / 或 . 分隔，例如 crm/customer）", requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "codegen")
     @NotNull(message = "业务名不能为空")
     private String businessName;
 
