@@ -86,6 +86,9 @@ DOCKER_DIR=$TARGET_DIR
 # Maven 安装路径（可选）
 MAVEN_HOME=
 
+# JDK 安装路径（可选，本地执行 pull.sh / mvn 时使用）
+JAVA_HOME=
+
 # Dockerfile 所在目录的绝对路径
 DOCKER_FILE_DIR=$DOCKER_FILE_DIR
 

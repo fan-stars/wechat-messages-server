@@ -15,6 +15,11 @@ else
   exit 1
 fi
 
+if [ -n "$JAVA_HOME" ]; then  # -n 检查字符串非空（长度大于0）
+  export JAVA_HOME
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 if [ -n "$MAVEN_HOME" ]; then  # -n 检查字符串非空（长度大于0）
   export PATH="$MAVEN_HOME/bin:$PATH"
 fi
