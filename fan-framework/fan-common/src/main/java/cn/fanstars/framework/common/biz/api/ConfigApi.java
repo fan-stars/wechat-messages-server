@@ -7,6 +7,7 @@ package cn.fanstars.framework.common.biz.api;
  */
 public interface ConfigApi {
 
+
     /**
      * 根据参数键查询参数值
      *
