@@ -278,6 +278,71 @@ CREATE TABLE `mp_auto_reply`  (
 -- ----------------------------
 
 -- ----------------------------
+-- Table structure for mp_message_forward_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `mp_message_forward_rule`;
+CREATE TABLE `mp_message_forward_rule`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `account_id` bigint NOT NULL COMMENT '公众号账号的编号',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '规则名称',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态（0正常 1停用）',
+  `priority` int NOT NULL DEFAULT 0 COMMENT '优先级，数值越大优先级越高',
+  `forward_mode` tinyint NOT NULL COMMENT '转发模式（1同步 2异步）',
+  `receive_response` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否接收 HTTP 响应体（仅同步有效）',
+  `use_response_as_reply` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否将响应作为微信被动回复（需 receive_response=1 且同步）',
+  `target_url` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '下游完整公众号回调 URL，如 http://host/admin-api/mp/open/{appId}',
+  `timeout_ms` int NOT NULL DEFAULT 3000 COMMENT '同步调用超时（毫秒）',
+  `message_types` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '转发的消息类型，逗号分隔；空表示全部',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_account_status_priority`(`account_id` ASC, `status` ASC, `priority` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '公众号消息转发规则表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of mp_message_forward_rule
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for mp_message_forward_log
+-- ----------------------------
+DROP TABLE IF EXISTS `mp_message_forward_log`;
+CREATE TABLE `mp_message_forward_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `rule_id` bigint NOT NULL COMMENT '转发规则编号',
+  `message_id` bigint NOT NULL COMMENT '消息编号',
+  `account_id` bigint NOT NULL COMMENT '公众号账号的编号',
+  `app_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '公众号 appId',
+  `openid` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '粉丝 openid',
+  `forward_mode` tinyint NOT NULL COMMENT '转发模式快照（1同步 2异步）',
+  `receive_response` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否接收响应快照',
+  `use_response_as_reply` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否作为微信回复快照',
+  `target_url` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '目标 URL 快照',
+  `request_body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '请求体 XML（原文）',
+  `response_body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '响应体 XML（原文）',
+  `http_status` int NULL DEFAULT NULL COMMENT 'HTTP 状态码',
+  `status` tinyint NOT NULL COMMENT '执行状态（0成功 1失败 2超时 3跳过）',
+  `duration_ms` int NULL DEFAULT NULL COMMENT '执行耗时（毫秒）',
+  `error_msg` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '错误信息',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_message_id`(`message_id` ASC) USING BTREE,
+  INDEX `idx_rule_id_create_time`(`rule_id` ASC, `create_time` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '公众号消息转发日志表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of mp_message_forward_log
+-- ----------------------------
+
+-- ----------------------------
 -- 字典类型 / 字典数据 / 菜单（mp 模块）
 -- 依赖 system 模块已创建 system_dict_type、system_dict_data、system_menu 表
 -- ----------------------------
@@ -285,6 +350,8 @@ CREATE TABLE `mp_auto_reply`  (
 -- system_dict_type
 INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (3001, '公众号自动回复的请求关键字匹配模式', 'mp_auto_reply_request_match', 0, '公众号自动回复的请求关键字匹配模式', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0', NULL);
 INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (3002, '公众号的消息类型', 'mp_message_type', 0, '公众号的消息类型', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0', NULL);
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (3003, '公众号消息转发模式', 'mp_message_forward_mode', 0, '公众号消息转发模式', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0', NULL);
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (3004, '公众号消息转发日志状态', 'mp_message_forward_log_status', 0, '公众号消息转发日志状态', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0', NULL);
 
 -- system_dict_data
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3001, 1, '完全匹配', '1', 'mp_auto_reply_request_match', 0, 'primary', '', '公众号自动回复的请求关键字匹配模式 - 完全匹配', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
@@ -299,6 +366,12 @@ INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `st
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3010, 8, '地理位置', 'location', 'mp_message_type', 0, 'default', '', '公众号的消息类型 - 地理位置', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3011, 9, '链接', 'link', 'mp_message_type', 0, 'default', '', '公众号的消息类型 - 链接', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3012, 10, '事件', 'event', 'mp_message_type', 0, 'default', '', '公众号的消息类型 - 事件', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3013, 1, '同步', '1', 'mp_message_forward_mode', 0, 'primary', '', '公众号消息转发模式 - 同步', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3014, 2, '异步', '2', 'mp_message_forward_mode', 0, 'success', '', '公众号消息转发模式 - 异步', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3015, 1, '成功', '0', 'mp_message_forward_log_status', 0, 'success', '', '公众号消息转发日志状态 - 成功', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3016, 2, '失败', '1', 'mp_message_forward_log_status', 0, 'danger', '', '公众号消息转发日志状态 - 失败', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3017, 3, '超时', '2', 'mp_message_forward_log_status', 0, 'warning', '', '公众号消息转发日志状态 - 超时', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3018, 4, '跳过', '3', 'mp_message_forward_log_status', 0, 'info', '', '公众号消息转发日志状态 - 跳过', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
 
 -- system_menu
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3001, '公众号管理', '', 1, 100, 0, '/mp', 'ep:compass', NULL, NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
@@ -352,5 +425,13 @@ INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_i
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3049, '删除模版消息', 'mp:message-template:delete', 3, 2, 3047, '', '', '', '', 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3050, '同步公众号模板', 'mp:message-template:sync', 3, 3, 3047, '', '', '', '', 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3051, '给粉丝发送模版消息', 'mp:message-template:send', 3, 4, 3047, '', '', '', '', 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3052, '消息转发', '', 2, 11, 3001, 'message-forward', 'ep:share', 'mp/messageForward/index', 'MpMessageForward', 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3053, '转发规则', '', 2, 1, 3052, 'rule', 'ep:setting', 'mp/messageForward/rule/index', 'MpMessageForwardRule', 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3054, '查询转发规则', 'mp:message-forward-rule:query', 3, 0, 3053, '', '', '', NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3055, '新增转发规则', 'mp:message-forward-rule:create', 3, 1, 3053, '', '', '', NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3056, '修改转发规则', 'mp:message-forward-rule:update', 3, 2, 3053, '', '', '', NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3057, '删除转发规则', 'mp:message-forward-rule:delete', 3, 3, 3053, '', '', '', NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3058, '转发日志', '', 2, 2, 3052, 'log', 'ep:document', 'mp/messageForward/log/index', 'MpMessageForwardLog', 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (3059, '查询转发日志', 'mp:message-forward-log:query', 3, 0, 3058, '', '', '', NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, b'0');
 
 SET FOREIGN_KEY_CHECKS = 1;
