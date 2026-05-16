@@ -67,4 +67,10 @@ public interface ErrorCodeConstants {
     ErrorCode MESSAGE_TEMPLATE_SYNC_FAIL = new ErrorCode(1_006_010_003, "同步模版消息失败，原因：{}");
     ErrorCode MESSAGE_TEMPLATE_SEND_FAIL = new ErrorCode(1_006_010_004, "发送模版消息失败，原因：{}");
 
+    // ========== 消息转发规则 1-006-011-000 ============
+    ErrorCode MESSAGE_FORWARD_RULE_NOT_EXISTS = new ErrorCode(1_006_011_000, "消息转发规则不存在");
+
+    // ========== 消息转发日志 1-006-012-000 ============
+    ErrorCode MESSAGE_FORWARD_LOG_NOT_EXISTS = new ErrorCode(1_006_012_000, "转发日志不存在");
+
 }
