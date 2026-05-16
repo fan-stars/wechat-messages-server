@@ -40,8 +40,23 @@ public class MessageForwardLogRespVO {
 
     @Schema(description = "转发模式", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty(value = "转发模式", converter = DictConvert.class)
-    @DictFormat("mp_message_forward_mode") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
+    @DictFormat("mp_message_forward_mode")
     private Integer forwardMode;
+
+    @Schema(description = "接收响应", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Boolean receiveResponse;
+
+    @Schema(description = "响应回复", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Boolean useResponseAsReply;
+
+    @Schema(description = "目标地址", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String targetUrl;
+
+    @Schema(description = "请求体")
+    private String requestBody;
+
+    @Schema(description = "响应体")
+    private String responseBody;
 
     @Schema(description = "HTTP状态", example = "1")
     @ExcelProperty("HTTP状态")
@@ -49,7 +64,7 @@ public class MessageForwardLogRespVO {
 
     @Schema(description = "执行状态", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @ExcelProperty(value = "执行状态", converter = DictConvert.class)
-    @DictFormat("mp_message_forward_log_status") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
+    @DictFormat("mp_message_forward_log_status")
     private Integer status;
 
     @Schema(description = "耗时")
