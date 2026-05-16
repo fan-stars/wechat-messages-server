@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.fanstars.base</groupId>
+    <groupId>cn.fanstars.wechat-messages-server</groupId>
     <artifactId>fan-dependencies</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
@@ -114,17 +114,17 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-biz-tenant</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-biz-data-permission</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-biz-ip</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -139,25 +139,25 @@
 
             <!-- Web 相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-web</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-security</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-websocket</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-retrofit2</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -181,7 +181,7 @@
 
             <!-- DB 相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-mybatis</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -250,7 +250,7 @@
             </dependency>
 
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-redis</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -293,14 +293,14 @@
 
             <!-- Job 定时任务相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-job</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <!-- 消息队列相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-mq</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -312,7 +312,7 @@
 
             <!-- 服务保障相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-protection</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -331,7 +331,7 @@
 
             <!-- 监控相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-monitor</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -443,13 +443,13 @@
 
             <!-- 工具类相关 -->
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-common</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>cn.fanstars.base</groupId>
+                <groupId>cn.fanstars.wechat-messages-server</groupId>
                 <artifactId>fan-framework-excel</artifactId>
                 <version>${revision}</version>
             </dependency>

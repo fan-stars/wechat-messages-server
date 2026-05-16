@@ -1,7 +1,7 @@
 services:
   spring-app:
     build: ${DOCKER_FILE_DIR}
-    container_name: fan-base
+    container_name: wechat-messages-server
     ports:
       - "${PORT}:48080"
     volumes:
@@ -17,5 +17,5 @@ services:
         -Djava.security.egd=file:/dev/./urandom
         }
       ARGS:
-        --spring.application.name=fan-base
+        --spring.application.name=wechat-messages-server
     restart: unless-stopped

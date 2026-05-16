@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>cn.fanstars.base</groupId>
-        <artifactId>fan-base</artifactId>
+        <groupId>cn.fanstars.wechat-messages-server</groupId>
+        <artifactId>wechat-messages-server</artifactId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -22,102 +22,102 @@
 
     <dependencies>
         <dependency>
-            <groupId>cn.fanstars.base</groupId>
+            <groupId>cn.fanstars.wechat-messages-server</groupId>
             <artifactId>fan-module-system</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
-            <groupId>cn.fanstars.base</groupId>
+            <groupId>cn.fanstars.wechat-messages-server</groupId>
             <artifactId>fan-module-infra</artifactId>
             <version>${revision}</version>
         </dependency>
 
         <!-- 会员中心。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-member</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- 数据报表。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-report</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
         <!-- 工作流。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-bpm</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
         <!-- 支付服务。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-pay</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- 微信公众号模块。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-mp</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- 商城相关模块。默认注释，保证编译速度-->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-product</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-promotion</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-trade</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-statistics</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- CRM 相关模块。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-crm</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- ERP 相关模块。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-erp</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- AI 大模型相关模块。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-ai</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- IoT 物联网相关模块。默认注释，保证编译速度 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-iot-biz</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
 
         <!-- MES 制造执行系统相关模块 -->
 <!--        <dependency>-->
-<!--            <groupId>cn.fanstars.base</groupId>-->
+<!--            <groupId>cn.fanstars.wechat-messages-server</groupId>-->
 <!--            <artifactId>fan-module-mes</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
@@ -131,7 +131,7 @@
 
         <!-- 服务保障相关 -->
         <dependency>
-            <groupId>cn.fanstars.base</groupId>
+            <groupId>cn.fanstars.wechat-messages-server</groupId>
             <artifactId>fan-framework-protection</artifactId>
         </dependency>
 
