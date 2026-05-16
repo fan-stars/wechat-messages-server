@@ -30,4 +30,9 @@ public class MessageForwardLogServiceImpl implements MessageForwardLogService {
         return messageForwardLogMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public void createMessageForwardLog(MessageForwardLogDO logDO) {
+        messageForwardLogMapper.insert(logDO);
+    }
+
 }

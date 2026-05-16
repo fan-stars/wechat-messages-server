@@ -69,6 +69,7 @@ public interface ErrorCodeConstants {
 
     // ========== 消息转发规则 1-006-011-000 ============
     ErrorCode MESSAGE_FORWARD_RULE_NOT_EXISTS = new ErrorCode(1_006_011_000, "消息转发规则不存在");
+    ErrorCode MESSAGE_FORWARD_RULE_INVALID = new ErrorCode(1_006_011_001, "消息转发规则配置无效：{}");
 
     // ========== 消息转发日志 1-006-012-000 ============
     ErrorCode MESSAGE_FORWARD_LOG_NOT_EXISTS = new ErrorCode(1_006_012_000, "转发日志不存在");

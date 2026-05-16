@@ -38,6 +38,16 @@ public class MpContextHolder {
      */
 	private static final ThreadLocal<String> APPID = new TransmittableThreadLocal<>();
 
+	/**
+	 * 入站消息是否已在 Controller 中入库
+	 */
+	private static final ThreadLocal<Boolean> MESSAGE_PERSISTED = new TransmittableThreadLocal<>();
+
+	/**
+	 * 已入库的 mp_message.id
+	 */
+	private static final ThreadLocal<Long> MESSAGE_ID = new TransmittableThreadLocal<>();
+
 	public static void setAppId(String appId) {
 		APPID.set(appId);
 	}
@@ -46,8 +56,26 @@ public class MpContextHolder {
 		return APPID.get();
 	}
 
+	public static void setMessagePersisted(Boolean messagePersisted) {
+		MESSAGE_PERSISTED.set(messagePersisted);
+	}
+
+	public static boolean isMessagePersisted() {
+		return Boolean.TRUE.equals(MESSAGE_PERSISTED.get());
+	}
+
+	public static void setMessageId(Long messageId) {
+		MESSAGE_ID.set(messageId);
+	}
+
+	public static Long getMessageId() {
+		return MESSAGE_ID.get();
+	}
+
 	public static void clear() {
 		APPID.remove();
+		MESSAGE_PERSISTED.remove();
+		MESSAGE_ID.remove();
 	}
 
 }

@@ -74,6 +74,12 @@ public class MpMessageServiceImpl implements MpMessageService {
     @Override
     @SneakyThrows
     public void receiveMessage(WxMpService weixinService, String appId, WxMpXmlMessage wxMessage) {
+        receiveMessageReturnId(weixinService, appId, wxMessage);
+    }
+
+    @Override
+    @SneakyThrows
+    public Long receiveMessageReturnId(WxMpService weixinService, String appId, WxMpXmlMessage wxMessage) {
         // 获得关联信息
         MpAccountDO account = mpAccountService.getAccountFromCache(appId);
         Assert.notNull(account, "公众号账号({}) 不存在", appId);
@@ -88,12 +94,12 @@ public class MpMessageServiceImpl implements MpMessageService {
                 if (user != null) {
                     break;
                 }
-                log.warn("[receiveMessage][粉丝({}/{}) 不存在，第 {} 次重试失败]", appId, wxMessage.getFromUser(), i + 1);
+                log.warn("[receiveMessageReturnId][粉丝({}/{}) 不存在，第 {} 次重试失败]", appId, wxMessage.getFromUser(), i + 1);
             }
         }
         // 特殊情况：可能 SubscribeHandler 没处理正确（例如说发生异常），则主动创建
         if (user == null) {
-            log.warn("[receiveMessage][粉丝({}/{}) 不存在，主动创建]", appId, wxMessage.getFromUser());
+            log.warn("[receiveMessageReturnId][粉丝({}/{}) 不存在，主动创建]", appId, wxMessage.getFromUser());
             WxMpUser wxMpUser = weixinService.getUserService().userInfo(wxMessage.getFromUser());
             user = mpUserService.saveUser(appId, wxMpUser);
         }
@@ -104,6 +110,7 @@ public class MpMessageServiceImpl implements MpMessageService {
                 .setSendFrom(MpMessageSendFromEnum.USER_TO_MP.getFrom());
         downloadMessageMedia(message);
         mpMessageMapper.insert(message);
+        return message.getId();
     }
 
     @Override

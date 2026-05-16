@@ -35,6 +35,16 @@ public interface MpMessageService {
     void receiveMessage(WxMpService weixinService, String appId, WxMpXmlMessage wxMessage);
 
     /**
+     * 接收粉丝消息并入库，返回消息编号
+     *
+     * @param weixinService 微信 Service
+     * @param appId 公众号 appId
+     * @param wxMessage 消息
+     * @return mp_message.id
+     */
+    Long receiveMessageReturnId(WxMpService weixinService, String appId, WxMpXmlMessage wxMessage);
+
+    /**
      * 使用公众号，给粉丝回复消息
      *
      * 例如说：自动回复、客服消息、菜单回复消息等场景

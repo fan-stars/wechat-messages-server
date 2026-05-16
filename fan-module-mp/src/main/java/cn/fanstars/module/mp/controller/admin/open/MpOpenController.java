@@ -10,6 +10,9 @@ import cn.fanstars.module.mp.dal.dataobject.account.MpAccountDO;
 import cn.fanstars.module.mp.framework.mp.core.MpServiceFactory;
 import cn.fanstars.module.mp.framework.mp.core.context.MpContextHolder;
 import cn.fanstars.module.mp.service.account.MpAccountService;
+import cn.fanstars.module.mp.service.forward.MessageForwardExecuteService;
+import cn.fanstars.module.mp.service.forward.bo.MessageForwardExecuteResultBO;
+import cn.fanstars.module.mp.service.message.MpMessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +38,12 @@ public class MpOpenController {
 
     @Resource
     private MpAccountService mpAccountService;
+
+    @Resource
+    private MpMessageService mpMessageService;
+
+    @Resource
+    private MessageForwardExecuteService messageForwardExecuteService;
 
     /**
      * 接收微信公众号的消息推送
@@ -98,14 +107,27 @@ public class MpOpenController {
         }
         Assert.notNull(inMessage, "消息解析失败，原因：消息为空");
 
-        // 第二步，处理消息
+        // 第二步，同步入库（供转发日志关联 messageId）
+        MpAccountDO account = mpAccountService.getAccountFromCache(appId);
+        Long messageId = mpMessageService.receiveMessageReturnId(mppService, appId, inMessage);
+        MpContextHolder.setMessagePersisted(true);
+        MpContextHolder.setMessageId(messageId);
+
+        // 第三步，透传转发
+        MessageForwardExecuteResultBO forwardResult = messageForwardExecuteService.execute(
+                account, inMessage, content, reqVO, messageId);
+        if (StrUtil.isNotBlank(forwardResult.getReplyXml())) {
+            return forwardResult.getReplyXml();
+        }
+
+        // 第四步，兜底：自动回复等
         WxMpMessageRouter mpMessageRouter = mpServiceFactory.getRequiredMpMessageRouter(appId);
         WxMpXmlOutMessage outMessage = mpMessageRouter.route(inMessage);
         if (outMessage == null) {
             return "";
         }
 
-        // 第三步，返回消息
+        // 第五步，返回消息
         if (StrUtil.isBlank(reqVO.getEncrypt_type())) { // 明文模式
             return outMessage.toXml();
         } else if (Objects.equals(reqVO.getEncrypt_type(), MpOpenHandleMessageReqVO.ENCRYPT_TYPE_AES)) { // AES 加密模式

@@ -13,4 +13,7 @@ public class MpAccountSimpleRespVO {
     @Schema(description = "公众号名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "繁星源码")
     private String name;
 
+    @Schema(description = "公众号 appId", requiredMode = Schema.RequiredMode.REQUIRED, example = "wx1234567890")
+    private String appId;
+
 }

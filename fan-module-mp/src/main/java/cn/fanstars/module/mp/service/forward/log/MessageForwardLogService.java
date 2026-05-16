@@ -27,4 +27,11 @@ public interface MessageForwardLogService {
      */
     PageResult<MessageForwardLogDO> getMessageForwardLogPage(MessageForwardLogPageReqVO pageReqVO);
 
+    /**
+     * 创建转发日志
+     *
+     * @param logDO 日志
+     */
+    void createMessageForwardLog(MessageForwardLogDO logDO);
+
 }

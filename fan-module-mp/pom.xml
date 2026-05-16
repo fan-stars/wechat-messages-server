@@ -69,6 +69,11 @@
             <artifactId>fan-framework-excel</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>cn.fanstars.wechat-messages-server</groupId>
+            <artifactId>fan-framework-retrofit2</artifactId>
+        </dependency>
+
         <!-- 三方云服务相关 -->
         <dependency>
             <groupId>com.github.binarywang</groupId>

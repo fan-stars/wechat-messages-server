@@ -50,14 +50,26 @@ public class MessageForwardRuleRespVO {
     @DictFormat("infra_boolean_string") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
     private Boolean useResponseAsReply;
 
+    @Schema(description = "目标地址", requiredMode = Schema.RequiredMode.REQUIRED, example = "http://127.0.0.1:48080/admin-api/mp/open/wxXXX")
+    @ExcelProperty("目标地址")
+    private String targetUrl;
+
     @Schema(description = "超时", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("超时")
     private Integer timeoutMs;
+
+    @Schema(description = "消息类型")
+    @ExcelProperty("消息类型")
+    private String messageTypes;
 
     @Schema(description = "记录日志", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty(value = "记录日志", converter = DictConvert.class)
     @DictFormat("infra_boolean_string") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
     private Boolean enableLog;
+
+    @Schema(description = "备注")
+    @ExcelProperty("备注")
+    private String remark;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
