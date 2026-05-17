@@ -33,6 +33,11 @@ public class MpMessageForwardClientImpl implements MpMessageForwardClient {
 
     private final OkHttpFactory okHttpFactory;
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * 同步阻塞调用，占用 {@code mp-message-handle} 线程直至响应或超时。
+     */
     @Override
     public MpMessageForwardHttpResultBO forward(String url, Map<String, String> headers,
                                                 String rawContent, int timeoutMs) {
@@ -40,21 +45,25 @@ public class MpMessageForwardClientImpl implements MpMessageForwardClient {
         MpMessageForwardApi api = createApi(timeoutMs);
         RequestBody requestBody = RequestBody.create(rawContent, MEDIA_TYPE_XML);
         long start = System.currentTimeMillis();
+        log.info("[forward][url({}) timeoutMs={} 开始透传]", url, timeoutMs);
         try {
-            // 同步执行，供微信回调线程或 @Async 线程使用
+            // 同步阻塞，占用 mp-message-handle 线程
             Response<ResponseBody> response = api.forward(url, headers, requestBody).execute();
             int durationMs = (int) (System.currentTimeMillis() - start);
             String responseBody = null;
             ResponseBody body = response.body();
             if (body != null) {
                 try (body) {
-                    responseBody = body.string(); // 下游被动回复 XML
+                    // 下游被动回复 XML（明文或 Encrypt 包装）
+                    responseBody = body.string();
                 }
             }
+            log.info("[forward][url({}) httpStatus={} durationMs={}]", url, response.code(), durationMs);
             return MpMessageForwardHttpResultBO.success(responseBody, response.code(), durationMs);
         } catch (Exception ex) {
             int durationMs = (int) (System.currentTimeMillis() - start);
             log.warn("[forward][url({}) 转发失败]", url, ex);
+            // 超时等由上层记 TIMEOUT / FAILURE
             return MpMessageForwardHttpResultBO.failure(resolveErrorMsg(ex), durationMs);
         }
     }
@@ -83,7 +92,8 @@ public class MpMessageForwardClientImpl implements MpMessageForwardClient {
                 .writeTimeout(timeoutMs, TimeUnit.MILLISECONDS)
                 .build();
         return new Retrofit.Builder()
-                .baseUrl(MpMessageForwardApi.PLACEHOLDER_BASE_URL) // @Url 为绝对地址时会忽略 baseUrl
+                // @Url 为绝对地址时会忽略 baseUrl
+                .baseUrl(MpMessageForwardApi.PLACEHOLDER_BASE_URL)
                 .client(client)
                 .build()
                 .create(MpMessageForwardApi.class);

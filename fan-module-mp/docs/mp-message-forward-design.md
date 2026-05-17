@@ -95,28 +95,33 @@
 sequenceDiagram
     participant WeChat
     participant MpOpen as MpOpenController
-    participant Forward as MpMessageForwardExecuteService
+    participant Orch as MpMessageReplyOrchestrator
+    participant Pool as mpMessageHandleExecutor
+    participant Persist as persistTask
+    participant Forward as syncForwardTasks
+    participant Local as localRouteTask
     participant Downstream as DownstreamMpOpen
-    participant Router as WxMpMessageRouter
-    participant AutoReply as MessageAutoReplyHandler
 
     WeChat->>MpOpen: POST raw XML + query
-    MpOpen->>MpOpen: checkSignature
-    MpOpen->>MpOpen: parse XML + sync persist mp_message
-    MpOpen->>Forward: execute matched rules
-    loop each rule by priority
-        Forward->>Downstream: POST same query + same body
-        Downstream-->>Forward: XML or empty
+    MpOpen->>MpOpen: checkSignature + parse XML
+    MpOpen->>Orch: orchestrate
+    Orch->>Pool: submit persistFuture
+    Orch->>Pool: async rules after persist
+    par after persist
+        Pool->>Persist: receiveMessageReturnId
+        Pool->>Forward: parallel sync HTTP
+        Forward->>Downstream: POST query + body
+        Pool->>Local: WxMpMessageRouter.route
     end
-    alt first sync use_response_as_reply with XML
-        Forward-->>MpOpen: raw XML response
-        MpOpen-->>WeChat: passthrough XML
-    else no downstream reply
-        MpOpen->>Router: route(inMessage)
-        Router->>AutoReply: default auto reply
-        AutoReply-->>MpOpen: WxMpXmlOutMessage or null
+    Orch->>Orch: wait up to messageReplyWaitTimeoutMs
+    alt valid reply within deadline
+        Orch-->>MpOpen: replyXml
         MpOpen-->>WeChat: toXml / toEncryptedXml
+    else timeout or no reply
+        Orch-->>MpOpen: empty string
+        MpOpen-->>WeChat: success empty
     end
+    Note over Pool: unfinished tasks continue without cancel
 ```
 
 ### 3.2 规则匹配
@@ -125,18 +130,21 @@ sequenceDiagram
 2. 若 `message_types` 非空，则当前消息的 `type`（或事件 `event`）须包含在列表中（逗号分隔）；为空表示不过滤。
 3. 按 `priority DESC, id ASC` 排序。
 
-### 3.3 执行策略（用户确认：按优先级依次执行所有命中规则）
+### 3.3 执行策略（多线程编排）
 
-- **异步规则**：每条独立投递线程池 / `@Async` 执行，不阻塞；`enable_log = 1` 时写库日志。
-- **同步规则**：在当前微信回调线程内串行执行，累加耗时。
-- **日志落库**：每条规则执行结束后，仅当 `enable_log = 1` 时 `INSERT` `mp_message_forward_log`；`enable_log = 0` 时跳过落库。
-- **微信回复**：遍历过程中，若某条规则满足 `use_response_as_reply = 1` 且响应体为非空 XML，则记为候选回复；**仅采纳第一个成功候选**，后续规则的 `use_response_as_reply` 仍执行转发但不再覆盖回复（`enable_log = 1` 时日志可记 `status = 3` 跳过回复）。
+- **编排入口**：`MpMessageReplyOrchestrator`，线程池 `mpMessageHandleExecutor`（TTL 上下文传递）。
+- **回复等待**：默认 `fan.mp.message-reply-wait-timeout-ms = 4000`，超时向微信返回空串（成功无回复）；**不 cancel** 未完成任务，后台继续执行并补写日志。
+- **入库**：`persistFuture` 根任务，完成后设置 `MpContextHolder.messagePersisted` / `messageId`。
+- **异步规则**：`persistFuture` 后 fire-and-forget（`@Async` 或线程池），不参与被动回复等待。
+- **同步规则**：`persistFuture` 后 **并行** HTTP；按 `priority DESC, id ASC` 选取第一条「`use_response_as_reply` + 成功 + 非空 XML」作为候选回复；单规则 `timeout_ms` 与全局剩余时间取 `min`。
+- **本地处理**：`persistFuture` 后并行执行 `WxMpMessageRouter.route`；转发无回复时在等待窗口内采纳本地 XML。
+- **日志落库**：`enable_log = 1` 时写入；同步规则在窗口内按优先级写 `SKIPPED`；超时后完成的规则由 `whenComplete` 补写。
 
 ### 3.4 与自动回复的关系
 
-- 转发在 `MpOpenController` 验签、入库后、进入 Router **之前**执行。
-- 若转发未产生被动回复，继续走 `WxMpMessageRouter` 及 `MessageAutoReplyHandler`。
-- 若转发已产生被动回复，**跳过 Router**，直接返回下游 XML 给微信。
+- `MpOpenController` 验签、解析后委托 `MpMessageReplyOrchestrator` 统一编排。
+- **转发回复优先于本地 Router**；转发无有效回复时在等待窗口内采纳 Router 结果。
+- 若窗口内均无回复，返回空串；Router / 转发任务可在后台继续完成。
 
 ---
 
@@ -144,9 +152,10 @@ sequenceDiagram
 
 | 组件 | 路径 | 关系 |
 |------|------|------|
-| 微信入口 | `MpOpenController` | 验签 → 同步入库 → 透传转发 → 有 XML 则直接返回，否则 Router |
-| 消息持久化 | `MpMessageServiceImpl.receiveMessage` | Controller 内**同步**入库；`MessageReceiveHandler` 检测已入库则跳过 |
-| 转发执行 | `MpMessageForwardExecuteService` | 原样 POST query + XML 到 `target_url` |
+| 微信入口 | `MpOpenController` | 验签 → 解析 → `MpMessageReplyOrchestrator` → 返回 XML 或空串 |
+| 消息编排 | `MpMessageReplyOrchestrator` | 入库 + 并行同步转发 + 并行 Router，最多等待配置时长 |
+| 消息持久化 | `MpMessageServiceImpl.receiveMessage` | 编排线程池内入库；`MessageReceiveHandler` 检测已入库则跳过 |
+| 转发执行 | `MessageForwardExecuteServiceImpl` | 原样 POST query + XML 到 `target_url` |
 | 消息路由 | `DefaultMpServiceFactory.buildMpMessageRouter` | 无转发回复时的兜底链路 |
 | 自动回复 | `MessageAutoReplyHandler` | 转发无回复时的兜底 |
 | SQL 初始化 | `sql/mysql/fan-module-mp.sql` | 表结构 + 字典 + 菜单 |

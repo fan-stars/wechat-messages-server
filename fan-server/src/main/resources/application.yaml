@@ -135,6 +135,8 @@ spring:
 --- #################### 繁星相关配置 ####################
 
 fan:
+  mp:
+    message-reply-wait-timeout-ms: 10000 # 微信被动回复等待上限（毫秒）
   info:
     version: 1.0.0
     base-package: cn.fanstars

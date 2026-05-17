@@ -118,8 +118,8 @@ public class DefaultMpServiceFactory implements MpServiceFactory {
 
     private WxMpMessageRouter buildMpMessageRouter(WxMpService mpService) {
         WxMpMessageRouter router = new WxMpMessageRouter(mpService);
-        // 记录所有事件的日志（异步执行）
-        router.rule().handler(messageReceiveHandler).next();
+        // 须 async(false)：编排器已预入库，MessageReceiveHandler 在同线程读 MpContextHolder 去重
+        router.rule().async(false).handler(messageReceiveHandler).next();
 
         // 接收客服会话管理事件
         router.rule().async(false).msgType(WxConsts.XmlMsgType.EVENT)
