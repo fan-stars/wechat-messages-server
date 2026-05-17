@@ -73,10 +73,12 @@ public class MessageForwardRuleServiceImpl implements MessageForwardRuleService 
     }
 
     private void validateMessageForwardRule(MessageForwardRuleSaveReqVO reqVO) {
+        // 异步：可接收响应体写入日志，但不得作为微信被动回复
         if (Objects.equals(reqVO.getForwardMode(), MessageForwardModeEnum.ASYNC.getMode())) {
-            if (Boolean.TRUE.equals(reqVO.getReceiveResponse()) || Boolean.TRUE.equals(reqVO.getUseResponseAsReply())) {
-                throw exception(MESSAGE_FORWARD_RULE_INVALID, "异步模式不能接收响应用于回复微信");
+            if (Boolean.TRUE.equals(reqVO.getUseResponseAsReply())) {
+                throw exception(MESSAGE_FORWARD_RULE_INVALID, "异步模式不能将响应用于回复微信");
             }
+            reqVO.setUseResponseAsReply(false);
         }
         if (Boolean.TRUE.equals(reqVO.getUseResponseAsReply())) {
             if (!Boolean.TRUE.equals(reqVO.getReceiveResponse())

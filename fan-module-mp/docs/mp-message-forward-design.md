@@ -66,14 +66,15 @@
 
 | forward_mode | receive_response | use_response_as_reply | 行为 |
 |:------------:|:----------------:|:---------------------:|------|
-| 异步(2) | 0 | 0 | 后台 POST，不等待业务回复微信 |
+| 异步(2) | 0 | 0 | 后台 POST，不读响应体 |
+| 异步(2) | 1 | 0 | 后台 POST，读取响应体写入日志，**不参与**微信被动回复 |
 | 同步(1) | 0 | 0 | 同步 POST，忽略响应体，继续下一条 |
 | 同步(1) | 1 | 0 | 同步 POST，记录响应，**不**回复微信 |
 | 同步(1) | 1 | 1 | 同步 POST，将响应 XML 原样作为被动回复；**仅全局第一条成功规则生效** |
 
 **应用层校验：**
 
-- `forward_mode = 2` 时，`receive_response`、`use_response_as_reply` 必须为 `false`。
+- `forward_mode = 2` 时，`use_response_as_reply` 必须为 `false`（`receive_response` 可为 `true`）。
 - `use_response_as_reply = 1` 时，必须 `receive_response = 1` 且 `forward_mode = 1`。
 
 ### 2.6 是否记录日志 `enable_log`
@@ -281,13 +282,15 @@ MP 不向 URL 追加 path，规则里写什么地址就 POST 到哪里。
 
 ### 6.3 入站响应（下游 → MP）
 
-仅当规则为 **同步** 且 `receive_response = 1` 时读取响应体：
+当 `receive_response = 1` 时读取响应体（同步与异步均适用）：
 
 | 规则 | MP 行为 |
 |------|---------|
-| `use_response_as_reply = 1` 且响应体非空 | **原样返回给微信** |
-| `use_response_as_reply = 0` | 记录日志，丢弃响应体 |
-| 响应为空 / HTTP 非 2xx / 超时 | 视为无回复，继续下一条规则 |
+| 同步 + `use_response_as_reply = 1` 且响应体非空 | **原样返回给微信**（编排器采纳） |
+| 同步 + `use_response_as_reply = 0` | 记录日志，**不**作为被动回复 |
+| 异步（任意 `use_response_as_reply`） | 记录日志，**不**参与被动回复等待 |
+| `receive_response = 0` | 不读响应体 |
+| 响应为空 / HTTP 非 2xx / 超时 | 同步视为无回复继续下一条；异步仅记失败/超时日志 |
 
 加密模式下，下游须返回与「直连微信」相同格式（明文或 AES 加密 XML）；MP **不再二次加解密**响应。
 

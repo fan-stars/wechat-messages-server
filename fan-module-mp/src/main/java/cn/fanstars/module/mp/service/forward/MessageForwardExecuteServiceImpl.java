@@ -194,7 +194,7 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
                                    MpOpenHandleMessageReqVO reqVO, Long messageId, MessageForwardRuleDO rule) {
         int timeoutMs = rule.getTimeoutMs() != null ? rule.getTimeoutMs() : DEFAULT_RULE_TIMEOUT_MS;
         ForwardHttpResult httpResult = doForwardHttp(rule, rawContent, reqVO, messageId, timeoutMs);
-        // 异步规则仅记日志，不参与被动回复
+        // 异步规则：可按 receive_response 记录响应体，永不参与被动回复
         saveLogIfEnabled(rule, account, inMessage, messageId, rawContent, httpResult, httpResult.logStatus);
     }
 
