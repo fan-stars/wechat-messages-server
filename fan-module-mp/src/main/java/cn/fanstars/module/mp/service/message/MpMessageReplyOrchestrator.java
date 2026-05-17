@@ -23,11 +23,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -37,15 +33,13 @@ import java.util.stream.Collectors;
 /**
  * 微信回调消息多线程编排器
  * <p>
- * 并行执行：入库、同步转发 HTTP、本地 WxMpMessageRouter；主线程最多等待 {@code fan.mp.message-reply-wait-timeout-ms}。
- * 超时向微信返回空串；后台任务不 cancel，继续执行并补写转发日志。
+ * 并行执行：入库、同步转发 HTTP、本地 {@link WxMpMessageRouter}；主线程通过 {@link CompletableFuture#allOf}
+ * 等待同步转发至 {@code fan.mp.message-reply-wait-timeout-ms}。超时向微信返回空串；未完成任务不 cancel，
+ * 由 {@link #onSyncForwardComplete} 补写转发日志。
  */
 @Service
 @Slf4j
 public class MpMessageReplyOrchestrator {
-
-    /** 轮询同步转发完成状态的间隔（毫秒） */
-    private static final long POLL_INTERVAL_MS = 50L;
 
     @Resource
     private MpMessageHandleProperties mpMessageHandleProperties;
@@ -60,18 +54,18 @@ public class MpMessageReplyOrchestrator {
     private ThreadPoolTaskExecutor mpMessageHandleExecutor;
 
     /**
-     * 编排处理并返回被动回复 XML；无回复时返回空串
+     * 编排处理并返回被动回复 XML
      *
-     * @param appId 公众号 appId
-     * @param account 公众号账号（含 tenantId）
-     * @param inMessage 解密后的入站消息
-     * @param rawContent 微信 POST 原始 XML（转发透传用）
-     * @param reqVO 回调 query 参数（验签、加密类型等）
-     * @param wxMpService 当前 appId 的 WxMpService
-     * @return 被动回复 XML，或空串表示无回复
+     * @param appId       公众号 appId
+     * @param account     公众号账号（含 tenantId）
+     * @param inMessage   解密后的入站消息
+     * @param rawContent  微信 POST 原始 XML（转发透传 body）
+     * @param reqVO       回调 query（验签、encrypt_type 等）
+     * @param wxMpService 当前公众号 WxMpService
+     * @return 被动回复 XML；无回复时返回空串（微信仍视为成功）
      */
     public String orchestrate(String appId, MpAccountDO account, WxMpXmlMessage inMessage, String rawContent,
-                             MpOpenHandleMessageReqVO reqVO, WxMpService wxMpService) {
+                              MpOpenHandleMessageReqVO reqVO, WxMpService wxMpService) {
         // 多租户上下文，子线程需透传
         Long tenantId = account.getTenantId();
         int waitTimeoutMs = mpMessageHandleProperties.getMessageReplyWaitTimeoutMs();
@@ -130,32 +124,8 @@ public class MpMessageReplyOrchestrator {
                                 messageId, syncRule, remainingMs);
                     }), mpMessageHandleExecutor);
             // 超时后主线程可能已返回，此处补写未完成规则的日志（不 cancel HTTP）
-            future.whenComplete((outcome, ex) -> {
-                if (ex != null) {
-                    log.warn("[orchestrate][ruleId({}) 同步转发异常]", syncRule.getId(), ex);
-                    return;
-                }
-                if (outcome == null) {
-                    return;
-                }
-                // 主线程已返回微信后，HTTP 仍可能完成，在此补写转发日志
-                runWithContextVoid(tenantId, appId, () -> {
-                    Long messageId = MpContextHolder.getMessageId();
-                    if (messageId == null) {
-                        // 回调线程上下文可能已 clear
-                        messageId = persistFuture.getNow(null);
-                    }
-                    if (messageId == null) {
-                        return;
-                    }
-                    // 与 saveSyncLogsWithSkip 去重，避免主线程与 whenComplete 双写日志
-                    if (loggedRuleIds.add(syncRule.getId())) {
-                        messageForwardExecuteService.saveSyncRuleLog(account, inMessage, messageId, rawContent,
-                                syncRule, outcome, outcome.getLogStatus());
-                    }
-                });
-            });
-            // 供主线程轮询汇总
+            future.whenComplete((outcome, ex) -> onSyncForwardComplete(tenantId, appId, account, inMessage, rawContent,
+                    syncRule, persistFuture, outcome, ex, loggedRuleIds));
             syncFutureMap.put(syncRule.getId(), future);
         }
 
@@ -194,9 +164,54 @@ public class MpMessageReplyOrchestrator {
     }
 
     /**
+     * 同步转发 Future 完成时补写日志（主线程已返回微信后仍可能触发）
+     *
+     * @param loggedRuleIds 与主线程 {@link #trySaveSyncRuleLog} 共用，保证每条规则只写一次日志
+     */
+    private void onSyncForwardComplete(Long tenantId, String appId, MpAccountDO account, WxMpXmlMessage inMessage,
+                                       String rawContent, MessageForwardRuleDO syncRule,
+                                       CompletableFuture<Long> persistFuture, RuleForwardOutcome outcome, Throwable ex,
+                                       Set<Long> loggedRuleIds) {
+        if (ex != null) {
+            log.warn("[orchestrate][ruleId({}) 同步转发异常]", syncRule.getId(), ex);
+            return;
+        }
+        if (outcome == null) {
+            return;
+        }
+        // 主线程已返回微信后，HTTP 仍可能完成，在此补写转发日志
+        runWithContextVoid(tenantId, appId, () -> {
+            Long messageId = MpContextHolder.getMessageId();
+            if (messageId == null) {
+                // 回调线程上下文可能已 clear
+                messageId = persistFuture.getNow(null);
+            }
+            if (messageId == null) {
+                return;
+            }
+            trySaveSyncRuleLog(account, inMessage, messageId, rawContent, syncRule, outcome,
+                    outcome.getLogStatus(), loggedRuleIds);
+        });
+    }
+
+    /**
+     * 按 {@code loggedRuleIds} 去重写入单条同步规则日志
+     *
+     * @param logStatus 可为 SKIPPED（低优先级已有回复时）
+     */
+    private void trySaveSyncRuleLog(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId, String rawContent,
+                                    MessageForwardRuleDO rule, RuleForwardOutcome outcome, Integer logStatus,
+                                    Set<Long> loggedRuleIds) {
+        if (messageId == null || !loggedRuleIds.add(rule.getId())) {
+            return;
+        }
+        messageForwardExecuteService.saveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus);
+    }
+
+    /**
      * 主线程内按优先级写同步规则日志，并标记「已有回复」的后续规则为 SKIPPED
      *
-     * @param loggedRuleIds 已写日志的 ruleId（与 whenComplete 补写去重）
+     * @param loggedRuleIds 已写日志的 ruleId（与 {@link #onSyncForwardComplete} 去重）
      */
     private void saveSyncLogsWithSkip(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId, String rawContent,
                                       List<MessageForwardRuleDO> syncRules,
@@ -221,8 +236,7 @@ public class MpMessageReplyOrchestrator {
             Integer logStatus = skipReply
                     ? MessageForwardLogStatusEnum.SKIPPED.getStatus()
                     : outcome.getLogStatus();
-            messageForwardExecuteService.saveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus);
-            loggedRuleIds.add(rule.getId());
+            trySaveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus, loggedRuleIds);
             if (!skipReply && outcome.isReplyCandidate() && adoptedReplyXml == null) {
                 adoptedReplyXml = outcome.getReplyXml();
             }
@@ -232,8 +246,7 @@ public class MpMessageReplyOrchestrator {
     /**
      * 等待入库完成（占用全局等待预算的一部分）
      *
-     * @param deadlineMs 向微信返回的硬截止时间（毫秒时间戳）
-     * @return 消息编号，超时未完成时可能为 null
+     * @return 消息编号；超时未完成时可能为 null
      */
     private Long awaitPersist(CompletableFuture<Long> persistFuture, long deadlineMs) {
         long remainingMs = deadlineMs - System.currentTimeMillis();
@@ -252,68 +265,37 @@ public class MpMessageReplyOrchestrator {
     }
 
     /**
-     * 在 deadline 前轮询同步转发结果；全部同步规则完成后可提前返回
+     * 在 deadline 内 {@link CompletableFuture#allOf} 等待全部同步转发结束（不 cancel），再按优先级选取回复
      *
      * @param completedOutcomes 输出：已完成的 ruleId → outcome
-     * @param deadlineMs 向微信返回的硬截止时间
-     * @return 采纳的被动回复 XML，无候选时返回 null
+     * @return 采纳的被动回复 XML；无候选时返回 null
      */
     private String waitAndCollectForwardReply(List<MessageForwardRuleDO> syncRules,
                                               Map<Long, CompletableFuture<RuleForwardOutcome>> syncFutureMap,
                                               Map<Long, RuleForwardOutcome> completedOutcomes,
                                               long deadlineMs) {
         // 不 cancel 未完成的 HTTP，仅停止主线程等待
-        while (System.currentTimeMillis() < deadlineMs) {
-            // 非阻塞收集已完成 Future
-            collectCompletedOutcomes(syncFutureMap, completedOutcomes);
-            // 所有同步规则均完成时，按 priority 选取回复（避免低优先级先完成被误采纳）
-            String reply = tryPickForwardReplyIfReady(syncRules, syncFutureMap, completedOutcomes);
-            if (StrUtil.isNotBlank(reply)) {
-                // 提前返回，缩短微信回调耗时
-                return reply;
+        if (!syncFutureMap.isEmpty()) {
+            long remainingMs = deadlineMs - System.currentTimeMillis();
+            if (remainingMs > 0) {
+                CompletableFuture<?>[] allSync = syncFutureMap.values().toArray(new CompletableFuture[0]);
+                try {
+                    // 超时仅结束主线程等待，不 cancel 未完成的 HTTP
+                    CompletableFuture.allOf(allSync).get(remainingMs, TimeUnit.MILLISECONDS);
+                } catch (Exception ex) {
+                    log.debug("[waitAndCollectForwardReply][等待同步转发未全部在 deadline 内完成]", ex);
+                }
             }
-            if (allFuturesDone(syncFutureMap)) {
-                // 全部结束（含失败），退出轮询
-                break;
-            }
-            // 短暂休眠，避免忙等
-            sleepQuietly(POLL_INTERVAL_MS);
         }
-        // deadline 到达后再收一轮
+        // deadline 到达或未全部完成时，再收一轮已完成结果
         collectCompletedOutcomes(syncFutureMap, completedOutcomes);
-        // 取已完成中的最高优先级候选
+        // 取已完成中的最高优先级候选（须全部 sync 完成后才采纳，由 pick 前 allOf 等待保证）
         return messageForwardExecuteService.pickForwardReplyByPriority(syncRules, completedOutcomes);
     }
 
     /**
-     * 仅当全部同步规则 Future 均 done 时，才按优先级选取回复
+     * 非阻塞收集已 done 的 Future 结果（含超时后仍陆续完成的项）
      */
-    private static String tryPickForwardReplyIfReady(List<MessageForwardRuleDO> syncRules,
-                                                     Map<Long, CompletableFuture<RuleForwardOutcome>> syncFutureMap,
-                                                     Map<Long, RuleForwardOutcome> completedOutcomes) {
-        for (MessageForwardRuleDO rule : syncRules) {
-            CompletableFuture<RuleForwardOutcome> future = syncFutureMap.get(rule.getId());
-            if (future == null || !future.isDone()) {
-                // 高优先级规则未完成，暂不采纳低优先级结果
-                return null;
-            }
-        }
-        return pickFromOutcomes(syncRules, completedOutcomes);
-    }
-
-    /** 按 priority DESC, id ASC 取第一条候选回复 */
-    private static String pickFromOutcomes(List<MessageForwardRuleDO> syncRules,
-                                           Map<Long, RuleForwardOutcome> completedOutcomes) {
-        for (MessageForwardRuleDO rule : syncRules) {
-            RuleForwardOutcome outcome = completedOutcomes.get(rule.getId());
-            if (outcome != null && outcome.isReplyCandidate()) {
-                return outcome.getReplyXml();
-            }
-        }
-        return null;
-    }
-
-    /** 将已完成的 Future 结果收集到 map（不阻塞未完成项） */
     private static void collectCompletedOutcomes(Map<Long, CompletableFuture<RuleForwardOutcome>> syncFutureMap,
                                                  Map<Long, RuleForwardOutcome> completedOutcomes) {
         syncFutureMap.forEach((ruleId, future) -> {
@@ -328,11 +310,6 @@ public class MpMessageReplyOrchestrator {
                 }
             }
         });
-    }
-
-    /** 同步转发 Future 是否均已结束（含异常完成） */
-    private static boolean allFuturesDone(Map<Long, CompletableFuture<RuleForwardOutcome>> syncFutureMap) {
-        return syncFutureMap.isEmpty() || syncFutureMap.values().stream().allMatch(CompletableFuture::isDone);
     }
 
     /**
@@ -368,7 +345,9 @@ public class MpMessageReplyOrchestrator {
         return outMessage != null ? outMessage.toXml() : null;
     }
 
-    /** 在编排线程池中异步执行，并透传租户与 appId */
+    /**
+     * 在编排线程池中异步执行，并透传租户与 appId
+     */
     private <T> CompletableFuture<T> supplyAsync(Long tenantId, String appId, Supplier<T> supplier) {
         return CompletableFuture.supplyAsync(() -> runWithContext(tenantId, appId, supplier), mpMessageHandleExecutor);
     }
@@ -388,20 +367,14 @@ public class MpMessageReplyOrchestrator {
         }
     }
 
-    /** {@link #runWithContext} 的无返回值版本 */
+    /**
+     * {@link #runWithContext} 的无返回值版本
+     */
     private static void runWithContextVoid(Long tenantId, String appId, Runnable runnable) {
         runWithContext(tenantId, appId, () -> {
             runnable.run();
             return null;
         });
-    }
-
-    private static void sleepQuietly(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
     }
 
 }

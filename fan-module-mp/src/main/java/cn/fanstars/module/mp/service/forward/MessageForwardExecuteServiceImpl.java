@@ -6,10 +6,8 @@ import cn.fanstars.module.mp.dal.dataobject.forward.log.MessageForwardLogDO;
 import cn.fanstars.module.mp.dal.dataobject.forward.rule.MessageForwardRuleDO;
 import cn.fanstars.module.mp.dal.mysql.forward.rule.MessageForwardRuleMapper;
 import cn.fanstars.module.mp.enums.forward.MessageForwardLogStatusEnum;
-import cn.fanstars.module.mp.enums.forward.MessageForwardModeEnum;
 import cn.fanstars.module.mp.framework.retrofit2.bo.MpMessageForwardHttpResultBO;
 import cn.fanstars.module.mp.framework.retrofit2.service.MpMessageForwardClient;
-import cn.fanstars.module.mp.service.forward.bo.MessageForwardExecuteResultBO;
 import cn.fanstars.module.mp.service.forward.bo.RuleForwardOutcome;
 import cn.fanstars.module.mp.service.forward.log.MessageForwardLogService;
 import cn.hutool.core.util.StrUtil;
@@ -26,22 +24,32 @@ import java.util.stream.Collectors;
 /**
  * 公众号消息转发执行 Service 实现类
  * <p>
- * 供 {@link cn.fanstars.module.mp.service.message.MpMessageReplyOrchestrator} 并行调用单条同步规则；
- * {@link #execute} 保留串行实现，便于单测或降级。
+ * 供 {@link cn.fanstars.module.mp.service.message.MpMessageReplyOrchestrator} 调用：规则匹配、单条 HTTP 透传（Retrofit）、日志落库。
+ * 同步规则 HTTP 本身不写日志，由编排器在合适的时机调用 {@link #saveSyncRuleLog}。
  */
 @Service
 @Slf4j
-public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteService {
+public class MessageForwardExecuteServiceImpl {
 
-    /** 与微信回调一致的请求 Content-Type */
+    /**
+     * 与微信回调一致的请求 Content-Type
+     */
     private static final String CONTENT_TYPE_XML = "application/xml; charset=UTF-8";
-    /** 透传请求头：转发规则编号 */
+    /**
+     * 透传请求头：转发规则编号
+     */
     private static final String HEADER_RULE_ID = "X-Mp-Rule-Id";
-    /** 透传请求头：已入库消息编号 */
+    /**
+     * 透传请求头：已入库消息编号
+     */
     private static final String HEADER_MESSAGE_ID = "X-Mp-Message-Id";
-    /** 转发日志 error_msg 最大长度 */
+    /**
+     * 转发日志 error_msg 最大长度
+     */
     private static final int ERROR_MSG_MAX_LENGTH = 1000;
-    /** 规则未配置 timeout_ms 时的默认 HTTP 超时（毫秒） */
+    /**
+     * 规则未配置 timeout_ms 时的默认 HTTP 超时（毫秒）
+     */
     private static final int DEFAULT_RULE_TIMEOUT_MS = 3000;
 
     @Resource
@@ -49,44 +57,14 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     @Resource
     private MessageForwardLogService messageForwardLogService;
     @Resource
-    private MessageForwardAsyncExecutor messageForwardAsyncExecutor;
-    @Resource
     private MpMessageForwardClient mpMessageForwardClient;
 
-    @Override
-    public MessageForwardExecuteResultBO execute(MpAccountDO account, WxMpXmlMessage inMessage,
-                                                 String rawContent, MpOpenHandleMessageReqVO reqVO,
-                                                 Long messageId) {
-        // 串行执行入口（编排器走并行 API，此方法供降级/单测）
-        List<MessageForwardRuleDO> rules = getMatchedRules(account.getId(), inMessage);
-        if (rules.isEmpty()) {
-            return MessageForwardExecuteResultBO.empty();
-        }
-        // 第一条采纳的同步转发回复
-        String adoptedReplyXml = null;
-        for (MessageForwardRuleDO rule : rules) {
-            if (Objects.equals(rule.getForwardMode(), MessageForwardModeEnum.ASYNC.getMode())) {
-                messageForwardAsyncExecutor.executeAsync(account, inMessage, rawContent, reqVO, messageId, rule);
-                // 异步不参与被动回复
-                continue;
-            }
-            RuleForwardOutcome outcome = forwardSyncRuleHttp(account, inMessage, rawContent, reqVO, messageId, rule,
-                    DEFAULT_RULE_TIMEOUT_MS);
-            // 已有回复则跳过后续候选
-            boolean skipReply = adoptedReplyXml != null && outcome.isReplyCandidate();
-            Integer logStatus = skipReply ? MessageForwardLogStatusEnum.SKIPPED.getStatus() : outcome.getLogStatus();
-            saveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus);
-            if (!skipReply && outcome.isReplyCandidate() && adoptedReplyXml == null) {
-                adoptedReplyXml = outcome.getReplyXml();
-            }
-        }
-        return StrUtil.isNotBlank(adoptedReplyXml)
-                ? MessageForwardExecuteResultBO.ofReply(adoptedReplyXml)
-                : MessageForwardExecuteResultBO.empty();
-    }
-
     /**
-     * 查询命中消息类型的启用规则（已按 priority DESC, id ASC 排序）
+     * 查询命中消息类型的启用规则
+     *
+     * @param accountId 公众号账号编号
+     * @param inMessage 入站消息（用于 message_types 匹配）
+     * @return 已按 priority DESC、id ASC 排序的规则列表
      */
     public List<MessageForwardRuleDO> getMatchedRules(Long accountId, WxMpXmlMessage inMessage) {
         return messageForwardRuleMapper.selectEnabledListByAccountId(accountId).stream()
@@ -101,7 +79,8 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     /**
      * 单条同步规则 HTTP 透传（不写日志，供并行编排）
      *
-     * @param remainingTimeoutMs 编排器 deadline 剩余时间，用于收紧 OkHttp 超时
+     * @param remainingTimeoutMs 编排器 deadline 剩余时间（毫秒），用于收紧 OkHttp 超时
+     * @return 转发结果；{@link RuleForwardOutcome#isReplyCandidate()} 为 true 时可作为微信被动回复
      */
     public RuleForwardOutcome forwardSyncRuleHttp(MpAccountDO account, WxMpXmlMessage inMessage, String rawContent,
                                                   MpOpenHandleMessageReqVO reqVO, Long messageId,
@@ -134,6 +113,8 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
 
     /**
      * 写入单条同步规则转发日志
+     *
+     * @param logStatus 可为 {@link MessageForwardLogStatusEnum#SKIPPED}（低优先级已有回复时）
      */
     public void saveSyncRuleLog(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId, String rawContent,
                                 MessageForwardRuleDO rule, RuleForwardOutcome outcome, Integer logStatus) {
@@ -143,15 +124,11 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     }
 
     /**
-     * 投递异步规则（persist 完成后调用）
-     */
-    public void submitAsyncRule(MpAccountDO account, WxMpXmlMessage inMessage, String rawContent,
-                                MpOpenHandleMessageReqVO reqVO, Long messageId, MessageForwardRuleDO rule) {
-        messageForwardAsyncExecutor.executeAsync(account, inMessage, rawContent, reqVO, messageId, rule);
-    }
-
-    /**
-     * 按优先级从并行完成的同步规则结果中选取被动回复
+     * 按优先级从已完成的同步规则结果中选取被动回复
+     *
+     * @param syncRules  已按 priority DESC 排序
+     * @param outcomeMap ruleId → 转发结果
+     * @return 最高优先级候选的 replyXml；无候选时返回 null
      */
     public String pickForwardReplyByPriority(List<MessageForwardRuleDO> syncRules,
                                              Map<Long, RuleForwardOutcome> outcomeMap) {
@@ -166,29 +143,7 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     }
 
     /**
-     * 并行结束后按优先级写日志并确定跳过回复状态
-     */
-    public String finalizeSyncRulesAndPickReply(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId,
-                                                String rawContent, List<MessageForwardRuleDO> syncRules,
-                                                Map<Long, RuleForwardOutcome> outcomeMap) {
-        String adoptedReplyXml = null;
-        for (MessageForwardRuleDO rule : syncRules) {
-            RuleForwardOutcome outcome = outcomeMap.get(rule.getId());
-            if (outcome == null) {
-                continue;
-            }
-            boolean skipReply = adoptedReplyXml != null && outcome.isReplyCandidate();
-            Integer logStatus = skipReply ? MessageForwardLogStatusEnum.SKIPPED.getStatus() : outcome.getLogStatus();
-            saveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus);
-            if (!skipReply && outcome.isReplyCandidate() && adoptedReplyXml == null) {
-                adoptedReplyXml = outcome.getReplyXml();
-            }
-        }
-        return adoptedReplyXml;
-    }
-
-    /**
-     * 执行单条规则（供 {@link MessageForwardAsyncExecutor} 异步线程调用）
+     * 执行单条异步规则：HTTP 透传并按配置写日志，不参与被动回复
      */
     public void executeForwardRule(MpAccountDO account, WxMpXmlMessage inMessage, String rawContent,
                                    MpOpenHandleMessageReqVO reqVO, Long messageId, MessageForwardRuleDO rule) {
@@ -199,7 +154,7 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     }
 
     /**
-     * 规则 message_types 与入站消息类型是否匹配
+     * message_types 为空表示匹配全部；事件消息同时匹配 event 字段
      */
     private boolean matchMessageType(MessageForwardRuleDO rule, WxMpXmlMessage inMessage) {
         if (StrUtil.isBlank(rule.getMessageTypes())) {
@@ -216,7 +171,7 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     }
 
     /**
-     * 执行单条规则的 HTTP 透传并解析日志状态
+     * 单条规则 HTTP 透传（Retrofit 同步调用）
      */
     private ForwardHttpResult doForwardHttp(MessageForwardRuleDO rule, String rawContent,
                                             MpOpenHandleMessageReqVO reqVO, Long messageId, int timeoutMs) {
@@ -260,8 +215,11 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
                 || StrUtil.containsIgnoreCase(errorMsg, "timed out");
     }
 
+    /**
+     * 拼接与微信回调一致的 query，便于下游验签、解密
+     */
     private static String buildTargetUrl(String targetUrl, MpOpenHandleMessageReqVO reqVO) {
-        // 与微信回调 URL 参数一致，下游可用相同 token 验签、解密
+        // 与微信回调 URL 参数一致，下游可用相同 token 验签
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("signature", reqVO.getSignature())
                 .queryParam("timestamp", reqVO.getTimestamp())
@@ -278,8 +236,8 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
     }
 
     private void saveLogIfEnabled(MessageForwardRuleDO rule, MpAccountDO account, WxMpXmlMessage inMessage,
-                                 Long messageId, String requestBody, ForwardHttpResult httpResult,
-                                 Integer logStatus) {
+                                  Long messageId, String requestBody, ForwardHttpResult httpResult,
+                                  Integer logStatus) {
         if (!Boolean.TRUE.equals(rule.getEnableLog())) {
             // 规则未开启日志则跳过持久化
             return;
@@ -311,7 +269,9 @@ public class MessageForwardExecuteServiceImpl implements MessageForwardExecuteSe
         return StrUtil.maxLength(errorMsg, ERROR_MSG_MAX_LENGTH);
     }
 
-    /** 单条规则 HTTP 透传的中间结果（尚未写入转发日志） */
+    /**
+     * 单条规则 HTTP 透传的中间结果（尚未写入转发日志）
+     */
     private static final class ForwardHttpResult {
         private final String responseBody;
         private final Integer httpStatus;

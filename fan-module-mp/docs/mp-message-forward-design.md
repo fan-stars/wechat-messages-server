@@ -136,7 +136,7 @@ sequenceDiagram
 - **编排入口**：`MpMessageReplyOrchestrator`，线程池 `mpMessageHandleExecutor`（TTL 上下文传递）。
 - **回复等待**：默认 `fan.mp.message-reply-wait-timeout-ms = 4000`，超时向微信返回空串（成功无回复）；**不 cancel** 未完成任务，后台继续执行并补写日志。
 - **入库**：`persistFuture` 根任务，完成后设置 `MpContextHolder.messagePersisted` / `messageId`。
-- **异步规则**：`persistFuture` 后 fire-and-forget（`@Async` 或线程池），不参与被动回复等待。
+- **异步规则**：`persistFuture` 后在线程池 fire-and-forget，不参与被动回复等待。
 - **同步规则**：`persistFuture` 后 **并行** HTTP；按 `priority DESC, id ASC` 选取第一条「`use_response_as_reply` + 成功 + 非空 XML」作为候选回复；单规则 `timeout_ms` 与全局剩余时间取 `min`。
 - **本地处理**：`persistFuture` 后并行执行 `WxMpMessageRouter.route`；转发无回复时在等待窗口内采纳本地 XML。
 - **日志落库**：`enable_log = 1` 时写入；同步规则在窗口内按优先级写 `SKIPPED`；超时后完成的规则由 `whenComplete` 补写。
@@ -156,7 +156,7 @@ sequenceDiagram
 | 微信入口 | `MpOpenController` | 验签 → 解析 → `MpMessageReplyOrchestrator` → 返回 XML 或空串 |
 | 消息编排 | `MpMessageReplyOrchestrator` | 入库 + 并行同步转发 + 并行 Router，最多等待配置时长 |
 | 消息持久化 | `MpMessageServiceImpl.receiveMessage` | 编排线程池内入库；`MessageReceiveHandler` 检测已入库则跳过 |
-| 转发执行 | `MessageForwardExecuteServiceImpl` | 原样 POST query + XML 到 `target_url` |
+| 转发执行 | `MessageForwardExecuteServiceImpl`（由编排器调用） | 原样 POST query + XML 到 `target_url` |
 | 消息路由 | `DefaultMpServiceFactory.buildMpMessageRouter` | 无转发回复时的兜底链路 |
 | 自动回复 | `MessageAutoReplyHandler` | 转发无回复时的兜底 |
 | SQL 初始化 | `sql/mysql/fan-module-mp.sql` | 表结构 + 字典 + 菜单 |
@@ -386,7 +386,7 @@ flowchart TD
 |------|------|------|
 | 1 | dal | `MpMessageForwardRuleDO`、`MpMessageForwardLogDO`、Mapper |
 | 2 | enums | `MpMessageForwardModeEnum`、`MpMessageForwardLogStatusEnum` |
-| 3 | service | `MpMessageForwardRuleService`（CRUD）、`MpMessageForwardExecuteService`（执行转发） |
+| 3 | service | `MpMessageForwardRuleService`（CRUD）、`MessageForwardExecuteServiceImpl`（执行转发） |
 | 4 | client | HTTP 客户端封装（XML 透传、超时、日志落库） |
 | 5 | controller | `MpOpenController` 集成转发 + 入库去重 |
 | 6 | admin | 管理端 API + VO |
