@@ -78,17 +78,23 @@ public class MessageForwardExecuteServiceImpl {
 
     /**
      * 单条同步规则 HTTP 透传（不写日志，供并行编排）
+     * <p>
+     * OkHttp 超时默认取规则 {@code timeout_ms}。仅当 {@code use_response_as_reply=true} 时，才与
+     * {@code replyWaitRemainingMs} 取 min，避免占用被动回复窗口仍无法回微信。
+     * <p>
+     * 仅 {@code receive_response=true}、不作为被动回复时，编排器主线程超时返回后 HTTP 仍按规则完整超时继续等待，
+     * 由 {@link cn.fanstars.module.mp.service.message.MpMessageReplyOrchestrator} 在 Future 完成时补写转发日志（含响应体）。
      *
-     * @param remainingTimeoutMs 编排器 deadline 剩余时间（毫秒），用于收紧 OkHttp 超时
+     * @param replyWaitRemainingMs 编排器被动回复窗口剩余时间（毫秒）；仅收紧「响应作回复」规则的 HTTP 超时
      * @return 转发结果；{@link RuleForwardOutcome#isReplyCandidate()} 为 true 时可作为微信被动回复
      */
     public RuleForwardOutcome forwardSyncRuleHttp(MpAccountDO account, WxMpXmlMessage inMessage, String rawContent,
                                                   MpOpenHandleMessageReqVO reqVO, Long messageId,
-                                                  MessageForwardRuleDO rule, int remainingTimeoutMs) {
+                                                  MessageForwardRuleDO rule, int replyWaitRemainingMs) {
         int timeoutMs = rule.getTimeoutMs() != null ? rule.getTimeoutMs() : DEFAULT_RULE_TIMEOUT_MS;
-        if (remainingTimeoutMs > 0) {
-            // 不超过编排器 deadline 剩余时间
-            timeoutMs = Math.min(timeoutMs, remainingTimeoutMs);
+        if (Boolean.TRUE.equals(rule.getUseResponseAsReply()) && replyWaitRemainingMs > 0) {
+            // 候选被动回复须在窗口内完成，HTTP 超时不超过剩余预算
+            timeoutMs = Math.min(timeoutMs, replyWaitRemainingMs);
         }
         ForwardHttpResult httpResult = doForwardHttp(rule, rawContent, reqVO, messageId, timeoutMs);
         // 候选回复须：use_response_as_reply + receive_response + 2xx + 非空 body

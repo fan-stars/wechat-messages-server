@@ -114,14 +114,17 @@ public class MpMessageReplyOrchestrator {
 
         Map<Long, CompletableFuture<RuleForwardOutcome>> syncFutureMap = new HashMap<>();
         for (MessageForwardRuleDO syncRule : syncRules) {
-            // 同步规则：入库完成后并行 HTTP，单规则超时受全局剩余时间约束
+            /*
+             * 同步规则：入库后并行 HTTP。主线程仅在 message-reply-wait-timeout-ms 内等待被动回复；
+             * 未在窗口内完成的 HTTP 不 cancel。仅 receive_response 时 HTTP 仍用规则 timeout_ms 收响应并补写日志。
+             */
             CompletableFuture<RuleForwardOutcome> future = persistFuture.thenApplyAsync(messageId -> runWithContext(
                     tenantId, appId, () -> {
-                        int remainingMs = (int) Math.max(0, deadlineMs - System.currentTimeMillis());
-                        log.info("[orchestrate][ruleId({}) 同步转发开始 messageId={} remainingMs={}]",
-                                syncRule.getId(), messageId, remainingMs);
+                        int replyWaitRemainingMs = (int) Math.max(0, deadlineMs - System.currentTimeMillis());
+                        log.info("[orchestrate][ruleId({}) 同步转发开始 messageId={} replyWaitRemainingMs={}]",
+                                syncRule.getId(), messageId, replyWaitRemainingMs);
                         return messageForwardExecuteService.forwardSyncRuleHttp(account, inMessage, rawContent, reqVO,
-                                messageId, syncRule, remainingMs);
+                                messageId, syncRule, replyWaitRemainingMs);
                     }), mpMessageHandleExecutor);
             // 超时后主线程可能已返回，此处补写未完成规则的日志（不 cancel HTTP）
             future.whenComplete((outcome, ex) -> onSyncForwardComplete(tenantId, appId, account, inMessage, rawContent,

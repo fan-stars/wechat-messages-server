@@ -137,7 +137,7 @@ sequenceDiagram
 - **回复等待**：默认 `fan.mp.message-reply-wait-timeout-ms = 4000`，超时向微信返回空串（成功无回复）；**不 cancel** 未完成任务，后台继续执行并补写日志。
 - **入库**：`persistFuture` 根任务，完成后设置 `MpContextHolder.messagePersisted` / `messageId`。
 - **异步规则**：`persistFuture` 后在线程池 fire-and-forget，不参与被动回复等待。
-- **同步规则**：`persistFuture` 后 **并行** HTTP；按 `priority DESC, id ASC` 选取第一条「`use_response_as_reply` + 成功 + 非空 XML」作为候选回复；单规则 `timeout_ms` 与全局剩余时间取 `min`。
+- **同步规则**：`persistFuture` 后 **并行** HTTP；按 `priority DESC, id ASC` 选取第一条「`use_response_as_reply` + 成功 + 非空 XML」作为候选回复。HTTP 超时默认取规则 `timeout_ms`；**仅** `use_response_as_reply=true` 时再与被动回复窗口剩余时间取 `min`。仅 `receive_response`、不作被动回复时，主线程超时后 HTTP 仍按规则完整超时继续，由 `whenComplete` 补写响应体。
 - **本地处理**：`persistFuture` 后并行执行 `WxMpMessageRouter.route`；转发无回复时在等待窗口内采纳本地 XML。
 - **日志落库**：`enable_log = 1` 时写入；同步规则在窗口内按优先级写 `SKIPPED`；超时后完成的规则由 `whenComplete` 补写。
 
