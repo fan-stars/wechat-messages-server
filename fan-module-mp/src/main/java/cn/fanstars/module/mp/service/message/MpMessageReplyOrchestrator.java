@@ -123,12 +123,12 @@ public class MpMessageReplyOrchestrator {
                         int replyWaitRemainingMs = (int) Math.max(0, deadlineMs - System.currentTimeMillis());
                         log.info("[orchestrate][ruleId({}) 同步转发开始 messageId={} replyWaitRemainingMs={}]",
                                 syncRule.getId(), messageId, replyWaitRemainingMs);
-                        return messageForwardExecuteService.forwardSyncRuleHttp(account, inMessage, rawContent, reqVO,
+                        return messageForwardExecuteService.forwardSyncRuleHttp(rawContent, reqVO,
                                 messageId, syncRule, replyWaitRemainingMs);
                     }), mpMessageHandleExecutor);
             // 超时后主线程可能已返回，此处补写未完成规则的日志（不 cancel HTTP）
             future.whenComplete((outcome, ex) -> onSyncForwardComplete(tenantId, appId, account, inMessage, rawContent,
-                    syncRule, persistFuture, outcome, ex, loggedRuleIds));
+                    reqVO, syncRule, persistFuture, outcome, ex, loggedRuleIds));
             syncFutureMap.put(syncRule.getId(), future);
         }
 
@@ -149,7 +149,7 @@ public class MpMessageReplyOrchestrator {
 
         if (StrUtil.isNotBlank(forwardReply)) {
             log.info("[orchestrate][appId({}) 采纳同步转发回复]", appId);
-            saveSyncLogsWithSkip(account, inMessage, messageId, rawContent, syncRules, completedOutcomes, loggedRuleIds);
+            saveSyncLogsWithSkip(account, inMessage, reqVO, messageId, rawContent, syncRules, completedOutcomes, loggedRuleIds);
             // 明文或下游已 AES 包装的 XML，由 Controller 决定是否再 encrypt
             return forwardReply;
         }
@@ -161,7 +161,7 @@ public class MpMessageReplyOrchestrator {
         } else {
             log.info("[orchestrate][appId({}) 无有效回复，返回空串]", appId);
         }
-        saveSyncLogsWithSkip(account, inMessage, messageId, rawContent, syncRules, completedOutcomes, loggedRuleIds);
+        saveSyncLogsWithSkip(account, inMessage, reqVO, messageId, rawContent, syncRules, completedOutcomes, loggedRuleIds);
         // 仍无回复则返回空串（微信视为处理成功）
         return StrUtil.nullToEmpty(localReply);
     }
@@ -172,7 +172,7 @@ public class MpMessageReplyOrchestrator {
      * @param loggedRuleIds 与主线程 {@link #trySaveSyncRuleLog} 共用，保证每条规则只写一次日志
      */
     private void onSyncForwardComplete(Long tenantId, String appId, MpAccountDO account, WxMpXmlMessage inMessage,
-                                       String rawContent, MessageForwardRuleDO syncRule,
+                                       String rawContent, MpOpenHandleMessageReqVO reqVO, MessageForwardRuleDO syncRule,
                                        CompletableFuture<Long> persistFuture, RuleForwardOutcome outcome, Throwable ex,
                                        Set<Long> loggedRuleIds) {
         if (ex != null) {
@@ -192,7 +192,7 @@ public class MpMessageReplyOrchestrator {
             if (messageId == null) {
                 return;
             }
-            trySaveSyncRuleLog(account, inMessage, messageId, rawContent, syncRule, outcome,
+            trySaveSyncRuleLog(account, inMessage, reqVO, messageId, rawContent, syncRule, outcome,
                     outcome.getLogStatus(), loggedRuleIds);
         });
     }
@@ -202,13 +202,14 @@ public class MpMessageReplyOrchestrator {
      *
      * @param logStatus 可为 SKIPPED（低优先级已有回复时）
      */
-    private void trySaveSyncRuleLog(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId, String rawContent,
+    private void trySaveSyncRuleLog(MpAccountDO account, WxMpXmlMessage inMessage, MpOpenHandleMessageReqVO reqVO,
+                                    Long messageId, String rawContent,
                                     MessageForwardRuleDO rule, RuleForwardOutcome outcome, Integer logStatus,
                                     Set<Long> loggedRuleIds) {
         if (messageId == null || !loggedRuleIds.add(rule.getId())) {
             return;
         }
-        messageForwardExecuteService.saveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus);
+        messageForwardExecuteService.saveSyncRuleLog(account, inMessage, reqVO, messageId, rawContent, rule, outcome, logStatus);
     }
 
     /**
@@ -216,7 +217,8 @@ public class MpMessageReplyOrchestrator {
      *
      * @param loggedRuleIds 已写日志的 ruleId（与 {@link #onSyncForwardComplete} 去重）
      */
-    private void saveSyncLogsWithSkip(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId, String rawContent,
+    private void saveSyncLogsWithSkip(MpAccountDO account, WxMpXmlMessage inMessage, MpOpenHandleMessageReqVO reqVO,
+                                      Long messageId, String rawContent,
                                       List<MessageForwardRuleDO> syncRules,
                                       Map<Long, RuleForwardOutcome> completedOutcomes, Set<Long> loggedRuleIds) {
         if (messageId == null || syncRules.isEmpty()) {
@@ -239,7 +241,7 @@ public class MpMessageReplyOrchestrator {
             Integer logStatus = skipReply
                     ? MessageForwardLogStatusEnum.SKIPPED.getStatus()
                     : outcome.getLogStatus();
-            trySaveSyncRuleLog(account, inMessage, messageId, rawContent, rule, outcome, logStatus, loggedRuleIds);
+            trySaveSyncRuleLog(account, inMessage, reqVO, messageId, rawContent, rule, outcome, logStatus, loggedRuleIds);
             if (!skipReply && outcome.isReplyCandidate() && adoptedReplyXml == null) {
                 adoptedReplyXml = outcome.getReplyXml();
             }

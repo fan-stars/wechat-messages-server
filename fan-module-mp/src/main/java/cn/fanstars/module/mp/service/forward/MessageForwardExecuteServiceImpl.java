@@ -6,6 +6,7 @@ import cn.fanstars.module.mp.dal.dataobject.forward.log.MessageForwardLogDO;
 import cn.fanstars.module.mp.dal.dataobject.forward.rule.MessageForwardRuleDO;
 import cn.fanstars.module.mp.dal.mysql.forward.rule.MessageForwardRuleMapper;
 import cn.fanstars.module.mp.enums.forward.MessageForwardLogStatusEnum;
+import cn.fanstars.module.mp.framework.mp.core.MpServiceFactory;
 import cn.fanstars.module.mp.framework.retrofit2.bo.MpMessageForwardHttpResultBO;
 import cn.fanstars.module.mp.framework.retrofit2.service.MpMessageForwardClient;
 import cn.fanstars.module.mp.service.forward.bo.RuleForwardOutcome;
@@ -15,6 +16,8 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
+import me.chanjar.weixin.mp.config.WxMpConfigStorage;
+import me.chanjar.weixin.mp.util.crypto.WxMpCryptUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -58,6 +61,8 @@ public class MessageForwardExecuteServiceImpl {
     private MessageForwardLogService messageForwardLogService;
     @Resource
     private MpMessageForwardClient mpMessageForwardClient;
+    @Resource
+    private MpServiceFactory mpServiceFactory;
 
     /**
      * 查询命中消息类型的启用规则
@@ -88,8 +93,7 @@ public class MessageForwardExecuteServiceImpl {
      * @param replyWaitRemainingMs 编排器被动回复窗口剩余时间（毫秒）；仅收紧「响应作回复」规则的 HTTP 超时
      * @return 转发结果；{@link RuleForwardOutcome#isReplyCandidate()} 为 true 时可作为微信被动回复
      */
-    public RuleForwardOutcome forwardSyncRuleHttp(MpAccountDO account, WxMpXmlMessage inMessage, String rawContent,
-                                                  MpOpenHandleMessageReqVO reqVO, Long messageId,
+    public RuleForwardOutcome forwardSyncRuleHttp(String rawContent, MpOpenHandleMessageReqVO reqVO, Long messageId,
                                                   MessageForwardRuleDO rule, int replyWaitRemainingMs) {
         int timeoutMs = rule.getTimeoutMs() != null ? rule.getTimeoutMs() : DEFAULT_RULE_TIMEOUT_MS;
         if (Boolean.TRUE.equals(rule.getUseResponseAsReply()) && replyWaitRemainingMs > 0) {
@@ -122,11 +126,12 @@ public class MessageForwardExecuteServiceImpl {
      *
      * @param logStatus 可为 {@link MessageForwardLogStatusEnum#SKIPPED}（低优先级已有回复时）
      */
-    public void saveSyncRuleLog(MpAccountDO account, WxMpXmlMessage inMessage, Long messageId, String rawContent,
+    public void saveSyncRuleLog(MpAccountDO account, WxMpXmlMessage inMessage, MpOpenHandleMessageReqVO reqVO,
+                                Long messageId, String rawContent,
                                 MessageForwardRuleDO rule, RuleForwardOutcome outcome, Integer logStatus) {
         ForwardHttpResult httpResult = new ForwardHttpResult(outcome.getResponseBody(), outcome.getHttpStatus(),
                 outcome.getDurationMs(), logStatus, outcome.getErrorMsg());
-        saveLogIfEnabled(rule, account, inMessage, messageId, rawContent, httpResult, logStatus);
+        saveLogIfEnabled(rule, account, inMessage, reqVO, messageId, rawContent, httpResult, logStatus);
     }
 
     /**
@@ -156,7 +161,7 @@ public class MessageForwardExecuteServiceImpl {
         int timeoutMs = rule.getTimeoutMs() != null ? rule.getTimeoutMs() : DEFAULT_RULE_TIMEOUT_MS;
         ForwardHttpResult httpResult = doForwardHttp(rule, rawContent, reqVO, messageId, timeoutMs);
         // 异步规则：可按 receive_response 记录响应体，永不参与被动回复
-        saveLogIfEnabled(rule, account, inMessage, messageId, rawContent, httpResult, httpResult.logStatus);
+        saveLogIfEnabled(rule, account, inMessage, reqVO, messageId, rawContent, httpResult, httpResult.logStatus);
     }
 
     /**
@@ -242,12 +247,14 @@ public class MessageForwardExecuteServiceImpl {
     }
 
     private void saveLogIfEnabled(MessageForwardRuleDO rule, MpAccountDO account, WxMpXmlMessage inMessage,
-                                  Long messageId, String requestBody, ForwardHttpResult httpResult,
-                                  Integer logStatus) {
+                                  MpOpenHandleMessageReqVO reqVO, Long messageId, String requestBody,
+                                  ForwardHttpResult httpResult, Integer logStatus) {
         if (!Boolean.TRUE.equals(rule.getEnableLog())) {
             // 规则未开启日志则跳过持久化
             return;
         }
+        String requestBodyPlaintext = decryptLogRequestBodyIfPossible(account, reqVO, requestBody);
+        String responseBodyPlaintext = decryptLogResponseBodyIfPossible(account, httpResult.responseBody);
         MessageForwardLogDO logDO = MessageForwardLogDO.builder()
                 .ruleId(rule.getId())
                 .messageId(messageId)
@@ -258,14 +265,90 @@ public class MessageForwardExecuteServiceImpl {
                 .receiveResponse(rule.getReceiveResponse())
                 .useResponseAsReply(rule.getUseResponseAsReply())
                 .targetUrl(rule.getTargetUrl())
-                .requestBody(requestBody)
-                .responseBody(httpResult.responseBody)
+                .requestBody(requestBodyPlaintext)
+                .responseBody(responseBodyPlaintext)
                 .httpStatus(httpResult.httpStatus)
                 .status(logStatus)
                 .durationMs(httpResult.durationMs)
                 .errorMsg(httpResult.errorMsg)
                 .build();
         messageForwardLogService.createMessageForwardLog(logDO);
+    }
+
+    /**
+     * 将日志中的请求体尽量解密为明文（仅 aes 且含 Encrypt 时）。
+     *
+     * 使用 weixin-java 的 {@link WxMpXmlMessage#fromEncryptedXml(String, WxMpConfigStorage, String, String, String)} 解密。
+     */
+    private String decryptLogRequestBodyIfPossible(MpAccountDO account, MpOpenHandleMessageReqVO reqVO, String requestBody) {
+        if (StrUtil.isBlank(requestBody) || account == null || reqVO == null) {
+            return requestBody;
+        }
+        if (!MpOpenHandleMessageReqVO.ENCRYPT_TYPE_AES.equals(reqVO.getEncrypt_type())) {
+            return requestBody;
+        }
+        String trimmed = StrUtil.trim(requestBody);
+        if (!StrUtil.contains(trimmed, "<Encrypt>")) {
+            return requestBody;
+        }
+        try {
+            WxMpConfigStorage configStorage = mpServiceFactory.getRequiredMpService(account.getAppId()).getWxMpConfigStorage();
+            WxMpXmlMessage decrypted = WxMpXmlMessage.fromEncryptedXml(trimmed, configStorage,
+                    reqVO.getTimestamp(), reqVO.getNonce(), reqVO.getMsg_signature());
+            // WxMpXmlMessage 无统一 toXml()，toString() 为明文字段串（满足“已解密”诉求）
+            return String.valueOf(decrypted);
+        } catch (Exception ex) {
+            return requestBody;
+        }
+    }
+
+    /**
+     * 将日志中的响应体尽量解密为明文（仅含 Encrypt 且带签名元数据时）。
+     *
+     * 使用 weixin-java 的 {@link WxMpCryptUtil#decryptXml(String, String, String, String)} 解密。
+     */
+    private String decryptLogResponseBodyIfPossible(MpAccountDO account, String responseBody) {
+        if (StrUtil.isBlank(responseBody) || account == null) {
+            return responseBody;
+        }
+        String trimmed = StrUtil.trim(responseBody);
+        if (!StrUtil.contains(trimmed, "<Encrypt>")) {
+            return responseBody;
+        }
+        try {
+            WxMpConfigStorage configStorage = mpServiceFactory.getRequiredMpService(account.getAppId()).getWxMpConfigStorage();
+            WxMpCryptUtil cryptUtil = new WxMpCryptUtil(configStorage);
+            // 响应体为“已包装的加密被动回复”，按微信协议包含 MsgSignature/TimeStamp/Nonce
+            String msgSignature = extractXmlTagValue(trimmed, "MsgSignature");
+            String timeStamp = extractXmlTagValue(trimmed, "TimeStamp");
+            String nonce = extractXmlTagValue(trimmed, "Nonce");
+            if (StrUtil.isBlank(msgSignature) || StrUtil.isBlank(timeStamp) || StrUtil.isBlank(nonce)) {
+                return responseBody;
+            }
+            return cryptUtil.decryptXml(msgSignature, timeStamp, nonce, trimmed);
+        } catch (Exception ex) {
+            return responseBody;
+        }
+    }
+
+    private static String extractXmlTagValue(String xml, String tag) {
+        if (StrUtil.isBlank(xml) || StrUtil.isBlank(tag)) {
+            return null;
+        }
+        String open = "<" + tag + ">";
+        String close = "</" + tag + ">";
+        int start = StrUtil.indexOfIgnoreCase(xml, open, 0);
+        if (start < 0) {
+            return null;
+        }
+        int end = StrUtil.indexOfIgnoreCase(xml, close, start + open.length());
+        if (end < 0) {
+            return null;
+        }
+        String value = xml.substring(start + open.length(), end);
+        value = StrUtil.removePrefix(value, "<![CDATA[");
+        value = StrUtil.removeSuffix(value, "]]>");
+        return StrUtil.trim(value);
     }
 
     private static String truncateErrorMsg(String errorMsg) {
