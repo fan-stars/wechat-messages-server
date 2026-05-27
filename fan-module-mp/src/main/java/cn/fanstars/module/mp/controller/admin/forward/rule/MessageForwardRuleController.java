@@ -9,6 +9,7 @@ import cn.fanstars.framework.excel.core.util.ExcelUtils;
 import cn.fanstars.module.mp.controller.admin.forward.rule.vo.MessageForwardRulePageReqVO;
 import cn.fanstars.module.mp.controller.admin.forward.rule.vo.MessageForwardRuleRespVO;
 import cn.fanstars.module.mp.controller.admin.forward.rule.vo.MessageForwardRuleSaveReqVO;
+import cn.fanstars.module.mp.controller.admin.forward.rule.vo.MessageForwardRuleSimpleRespVO;
 import cn.fanstars.module.mp.dal.dataobject.forward.rule.MessageForwardRuleDO;
 import cn.fanstars.module.mp.service.forward.rule.MessageForwardRuleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,6 +85,14 @@ public class MessageForwardRuleController {
     public CommonResult<PageResult<MessageForwardRuleRespVO>> getMessageForwardRulePage(@Valid MessageForwardRulePageReqVO pageReqVO) {
         PageResult<MessageForwardRuleDO> pageResult = messageForwardRuleService.getMessageForwardRulePage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, MessageForwardRuleRespVO.class));
+    }
+
+    @GetMapping("/list-all-simple")
+    @Operation(summary = "获取转发规则精简信息列表")
+    @PreAuthorize("@ss.hasPermission('mp:message-forward-rule:query') or @ss.hasPermission('mp:message-forward-log:query')")
+    public CommonResult<List<MessageForwardRuleSimpleRespVO>> getSimpleMessageForwardRules() {
+        List<MessageForwardRuleDO> list = messageForwardRuleService.getMessageForwardRuleList();
+        return success(BeanUtils.toBean(list, MessageForwardRuleSimpleRespVO.class));
     }
 
     @GetMapping("/export-excel")

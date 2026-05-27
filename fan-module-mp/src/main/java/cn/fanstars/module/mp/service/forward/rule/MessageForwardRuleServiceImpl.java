@@ -98,4 +98,9 @@ public class MessageForwardRuleServiceImpl implements MessageForwardRuleService 
         return messageForwardRuleMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<MessageForwardRuleDO> getMessageForwardRuleList() {
+        return messageForwardRuleMapper.selectList();
+    }
+
 }

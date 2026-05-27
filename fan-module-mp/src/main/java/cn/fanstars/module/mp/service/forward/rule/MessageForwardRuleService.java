@@ -60,4 +60,11 @@ public interface MessageForwardRuleService {
      */
     PageResult<MessageForwardRuleDO> getMessageForwardRulePage(MessageForwardRulePageReqVO pageReqVO);
 
+    /**
+     * 获得转发规则精简列表（用于下拉、日志展示等）
+     *
+     * @return 转发规则列表
+     */
+    List<MessageForwardRuleDO> getMessageForwardRuleList();
+
 }
