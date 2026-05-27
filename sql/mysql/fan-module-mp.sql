@@ -74,7 +74,7 @@ CREATE TABLE `mp_user`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `mp_tag`;
 CREATE TABLE `mp_tag`  (
-  `id` bigint NOT NULL COMMENT '主键',
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
   `tag_id` bigint NOT NULL COMMENT '公众号标签 id',
   `name` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名',
   `count` int NOT NULL DEFAULT 0 COMMENT '此标签下粉丝数',
@@ -87,7 +87,7 @@ CREATE TABLE `mp_tag`  (
   `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_account_id`(`account_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '公众号标签表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '公众号标签表' ROW_FORMAT = Dynamic;
 
 
 -- ----------------------------
