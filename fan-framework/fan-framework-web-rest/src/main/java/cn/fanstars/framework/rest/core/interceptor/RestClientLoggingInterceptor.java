@@ -1,24 +1,21 @@
 package cn.fanstars.framework.rest.core.interceptor;
 
 import cn.fanstars.framework.rest.config.RestClientProperties;
+import cn.fanstars.framework.rest.core.client.BufferingClientHttpResponseWrapper;
 import cn.fanstars.framework.rest.core.util.FastjsonResponseCompareUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.lang.NonNull;
-import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -45,10 +42,9 @@ public class RestClientLoggingInterceptor implements ClientHttpRequestIntercepto
         long start = System.currentTimeMillis();
         logRequest(request, body);
         ClientHttpResponse response = execution.execute(request, body);
-        // 响应流只能读一次，先缓存字节再写回包装类
-        byte[] responseBody = StreamUtils.copyToByteArray(response.getBody());
-        logResponse(request, response, responseBody, System.currentTimeMillis() - start);
-        return new BufferingClientHttpResponseWrapper(response, responseBody);
+        BufferingClientHttpResponseWrapper bufferingResponse = BufferingClientHttpResponseWrapper.buffer(response);
+        logResponse(request, bufferingResponse, bufferingResponse.getBodyBytes(), System.currentTimeMillis() - start);
+        return bufferingResponse;
     }
 
     /**
@@ -96,43 +92,6 @@ public class RestClientLoggingInterceptor implements ClientHttpRequestIntercepto
             return text;
         }
         return text.substring(0, maxLength) + "...(truncated)";
-    }
-
-    /**
-     * 可重复读取的响应包装：拦截器消费 body 后，下游 Jackson 仍能反序列化
-     */
-    private record BufferingClientHttpResponseWrapper(ClientHttpResponse response,
-                                                      byte[] body) implements ClientHttpResponse {
-
-        @Override
-        @NonNull
-        public InputStream getBody() {
-            return new ByteArrayInputStream(body); // 从缓存字节重建流
-        }
-
-        @Override
-        @NonNull
-        public HttpHeaders getHeaders() {
-            return response.getHeaders();
-        }
-
-        @Override
-        @NonNull
-        public HttpStatusCode getStatusCode() throws IOException {
-            return response.getStatusCode();
-        }
-
-        @Override
-        @NonNull
-        public String getStatusText() throws IOException {
-            return response.getStatusText();
-        }
-
-        @Override
-        public void close() {
-            response.close();
-        }
-
     }
 
 }
