@@ -29,6 +29,7 @@
         <module>fan-framework-biz-ip</module>
 
         <module>fan-framework-retrofit2</module>
+        <module>fan-framework-web-rest</module>
     </modules>
 
     <artifactId>fan-framework</artifactId>

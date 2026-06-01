@@ -161,6 +161,11 @@
                 <artifactId>fan-framework-retrofit2</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.fanstars.base</groupId>
+                <artifactId>fan-framework-web-rest</artifactId>
+                <version>${revision}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
