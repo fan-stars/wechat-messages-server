@@ -29,8 +29,6 @@ public final class FastJsonRestMessageConverters {
 
     /**
      * 重置并注册：表单 + UTF-8 文本 + Fastjson JSON
-     *
-     * @param converters {@link org.springframework.web.client.RestClient.Builder#messageConverters} 入参列表
      */
     public static void apply(List<HttpMessageConverter<?>> converters) {
         apply(converters, true);
@@ -38,27 +36,24 @@ public final class FastJsonRestMessageConverters {
 
     /**
      * 重置并注册 Fastjson JSON；可选是否同时注册表单与纯文本转换器
-     *
-     * @param converters           待配置的转换器列表（会先 {@code clear}）
-     * @param includeFormAndString 为 true 时追加 {@link FormHttpMessageConverter} 与 {@link StringHttpMessageConverter}
      */
     public static void apply(List<HttpMessageConverter<?>> converters, boolean includeFormAndString) {
-        converters.clear();
+        converters.clear(); // 去掉 HttpServiceFactory 默认的 Jackson，避免与 @JSONField 冲突
         if (includeFormAndString) {
-            converters.add(new FormHttpMessageConverter());
+            converters.add(new FormHttpMessageConverter()); // application/x-www-form-urlencoded
             converters.add(new StringHttpMessageConverter(StandardCharsets.UTF_8));
         }
         converters.add(createFastJsonConverter());
     }
 
     /**
-     * 创建仅处理 JSON 的 Fastjson 转换器（{@code application/json}、{@code application/*+json}）
+     * 创建仅处理 JSON 的 Fastjson 转换器
      */
     public static FastJsonHttpMessageConverter createFastJsonConverter() {
         FastJsonHttpMessageConverter fastJson = new FastJsonHttpMessageConverter();
         List<MediaType> mediaTypes = new ArrayList<>();
         mediaTypes.add(MediaType.APPLICATION_JSON);
-        mediaTypes.add(new MediaType("application", "*+json"));
+        mediaTypes.add(new MediaType("application", "*+json")); // 兼容 application/vnd.api+json 等
         fastJson.setSupportedMediaTypes(mediaTypes);
         return fastJson;
     }
