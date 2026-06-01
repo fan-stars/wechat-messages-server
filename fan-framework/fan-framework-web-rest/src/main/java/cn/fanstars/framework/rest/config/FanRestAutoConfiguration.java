@@ -2,7 +2,9 @@ package cn.fanstars.framework.rest.config;
 
 import cn.fanstars.framework.rest.core.HttpServiceFactory;
 import cn.fanstars.framework.rest.core.impl.HttpServiceFactoryImpl;
+import cn.fanstars.framework.rest.core.interceptor.RestClientLoggingInterceptor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -32,6 +34,18 @@ public class FanRestAutoConfiguration {
         executor.setThreadNamePrefix(pool.getThreadNamePrefix());
         executor.initialize(); // 应用上述参数并启动线程池
         return executor;
+    }
+
+    /**
+     * 全局日志拦截器：请求/响应日志 + 非生产环境 Fastjson 响应比对
+     * <p>
+     * 实现 {@link ClientHttpRequestInterceptor}，会随 httpServiceFactory 注入到所有 RestClient。
+     * {@code fan.rest.log.enabled=false} 时不注册，无日志与响应体缓冲开销。
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "fan.rest.log", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public RestClientLoggingInterceptor restClientLoggingInterceptor(RestClientProperties properties) {
+        return new RestClientLoggingInterceptor(properties);
     }
 
     /**

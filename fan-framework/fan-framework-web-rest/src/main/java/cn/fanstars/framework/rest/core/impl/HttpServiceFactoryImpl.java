@@ -43,6 +43,9 @@ public class HttpServiceFactoryImpl implements HttpServiceFactory {
      * 由 FanRestAutoConfiguration 注入，供 HttpClient 异步 IO 使用
      */
     private final Executor executor;
+    /**
+     * 含 RestClientLoggingInterceptor 等 Spring 容器中的拦截器 Bean
+     */
     private final List<ClientHttpRequestInterceptor> interceptors;
 
     /**
