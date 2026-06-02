@@ -56,7 +56,6 @@ application-my.yaml
 *.pdb
 
 **/bootstrap-*.yaml
-**/application-*.yaml
 
 **/package-info.java
 **Controller.http

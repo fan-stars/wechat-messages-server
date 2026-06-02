@@ -106,32 +106,6 @@ aj:
     req-check-minute-limit: 60 # check 接口一分钟内请求数限制
     req-verify-minute-limit: 60 # verify 接口一分钟内请求数限制
 
---- #################### 消息队列相关 ####################
-
-# rocketmq 配置项，对应 RocketMQProperties 配置类
-rocketmq:
-  # Producer 配置项
-  producer:
-    group: ${spring.application.name}_PRODUCER # 生产者分组
-
-spring:
-  # Kafka 配置项，对应 KafkaProperties 配置类
-  kafka:
-    # Kafka Producer 配置项
-    producer:
-      acks: 1 # 0-不应答。1-leader 应答。all-所有 leader 和 follower 应答。
-      retries: 3 # 发送失败时，重试发送的次数
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer # 消息的 value 的序列化
-    # Kafka Consumer 配置项
-    consumer:
-      auto-offset-reset: earliest # 设置消费者分组最初的消费进度为 earliest 。可参考博客 https://blog.csdn.net/lishuangzhe7047/article/details/74530417 理解
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: '*'
-    # Kafka Consumer Listener 监听器配置
-    listener:
-      missing-topics-fatal: false # 消费监听接口监听的主题不存在时，默认会报错。所以通过设置为 false ，解决报错
-
 --- #################### 繁星相关配置 ####################
 
 fan:
@@ -156,21 +130,10 @@ fan:
     algorithm: AES # 加密算法，支持 AES、RSA 等
     request-key: 52549111389893486934626385991395 # 【AES 案例】请求加密的秘钥，，必须 16、24、32 位
     response-key: 96103715984234343991809655248883 # 【AES 案例】响应加密的秘钥，AES 案例，必须 16、24、32 位
-#    request-key: MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKWzasimcZ1icsWDPVdTXcZs1DkOWjI+m9bTQU8aOqflnomkr6QO1WWeSHBHzuJGsTlV/ZY2pFfq/NstKC94hBjx7yioYJvzb2bKN/Uy4j5nM3iCF//u0RiFkkY8j0Bt/EWoFTOb6RHf8cHIAjbYYtP3pYzbpCIwryfe0g//KIuzAgMBAAECgYADDjZrYcpZjR2xr7RbXmGtzYbyUGXwZEAqa3XaWBD51J2iSyOkAlQEDjGmxGQ3vvb4qDHHadWI+3/TKNeDXJUO+xTVJrnismK5BsHyC6dfxlIK/5BAuknryTca/3UoA1yomS9ZlF3Q0wcecaDoEnSmZEaTrp9T3itPAz4KnGjv5QJBAN5mNcfu6iJ5ktNvEdzqcxkKwbXb9Nq1SLnmTvt+d5TPX7eQ9fCwtOfVu5iBLhhZzb5PJ7pSN3Zt6rl5/jPOGv0CQQC+vETX9oe1wbxZSv6/RBGy0Xow6GndbJwvd89PcAJ2h+OJXWtg/rRHB3t9EQm7iis0XbZTapj19E4U6l8EibhvAkEA1CvYpRwmHKu1SqdM+GBnW/2qHlBwwXJvpoK02TOm674HR/4w0+YRQJfkd7LOAgcyxJuJgDTNmtt0MmzS+iNoFQJAMVSUIZ77XoDq69U/qcw7H5qaFcgmiUQr6QL9tTftCyb+LGri+MUnby96OtCLSdvkbLjIDS8GvKYhA7vSM2RDNQJBAKGyVVnFFIrbK3yuwW71yvxQEGoGxlgvZSezZ4vGgqTxrr9HvAtvWLwR6rpe6ybR/x8uUtoW7NRBWgpiIFwjvY4= # 【RSA 案例】请求解密的私钥
-#    response-key: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDh/CHyBcS/zEfVyINVA7+c9Xxl0CPdxPMK1OIjxaLy/7BLfbkoEpI8onQtjuzfpuxCraDem9bu3BMF0pMH95HytI3Vi0kGjaV+WLIalwgc2w37oA2sbsmKzQOP7SDLO5s2QJNAD7kVwd+Q5rqaLu2MO0xVv+0IUJhn83hClC0L5wIDAQAB # 【RSA 案例】响应加密的公钥
   websocket:
     enable: true # websocket的开关
     path: /infra/ws # 路径
     sender-type: local # 消息发送的类型，可选值为 local、redis、rocketmq、kafka、rabbitmq
-    sender-rocketmq:
-      topic: ${spring.application.name}-websocket # 消息发送的 RocketMQ Topic
-      consumer-group: ${spring.application.name}-websocket-consumer # 消息发送的 RocketMQ Consumer Group
-    sender-rabbitmq:
-      exchange: ${spring.application.name}-websocket-exchange # 消息发送的 RabbitMQ Exchange
-      queue: ${spring.application.name}-websocket-queue # 消息发送的 RabbitMQ Queue
-    sender-kafka:
-      topic: ${spring.application.name}-websocket # 消息发送的 Kafka Topic
-      consumer-group: ${spring.application.name}-websocket-consumer # 消息发送的 Kafka Consumer Group
   swagger:
     title: 繁星快速开发平台
     description: 提供管理后台、用户 App 的所有功能
@@ -189,8 +152,6 @@ fan:
     import-enable: false # 是否生成 Excel 导入接口
   tenant: # 多租户相关配置项
     enable: false
-    ignore-urls:
-      - /jmreport/* # 积木报表，无法携带租户编号
     ignore-visit-urls:
       - /admin-api/system/user/profile/**
       - /admin-api/system/auth/**
@@ -203,8 +164,6 @@ fan:
       - mail_account
       - mail_template
       - sms_template
-      - iot:device
-      - iot:thing_model_list
   sms-code: # 短信验证码相关的配置项
     expire-times: 10m
     send-frequency: 1m
