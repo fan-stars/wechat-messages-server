@@ -79,8 +79,6 @@
         <jimubi.version>2.3.2</jimubi.version>
         <weixin-java.version>4.8.2-20260501.180637</weixin-java.version>
         <alipay-sdk-java.version>4.40.771.ALL</alipay-sdk-java.version>
-
-        <retrofit2.version>2.9.0</retrofit2.version>
     </properties>
 
     <dependencyManagement>
@@ -156,11 +154,6 @@
                 <version>${revision}</version>
             </dependency>
 
-            <dependency>
-                <groupId>cn.fanstars.base</groupId>
-                <artifactId>fan-framework-retrofit2</artifactId>
-                <version>${revision}</version>
-            </dependency>
             <dependency>
                 <groupId>cn.fanstars.base</groupId>
                 <artifactId>fan-framework-web-rest</artifactId>
@@ -687,22 +680,6 @@
                         <artifactId>hutool-core</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>retrofit</artifactId>
-                <version>${retrofit2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>converter-jackson</artifactId>
-                <version>${retrofit2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>adapter-rxjava2</artifactId>
-                <version>${retrofit2.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -1,7 +1,9 @@
 package cn.fanstars.framework.rest.core.interceptor;
 
+import cn.fanstars.framework.rest.config.FanRestAutoConfiguration;
 import cn.fanstars.framework.rest.config.RestClientProperties;
 import cn.fanstars.framework.rest.core.client.BufferingClientHttpResponseWrapper;
+import cn.fanstars.framework.rest.core.impl.HttpServiceFactoryImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,8 +20,8 @@ import java.nio.charset.StandardCharsets;
 /**
  * RestClient 全局日志拦截器：记录请求/响应
  * <p>
- * 由 {@link cn.fanstars.framework.rest.config.FanRestAutoConfiguration} 注册为 Bean，
- * 随 {@link cn.fanstars.framework.rest.core.impl.HttpServiceFactoryImpl} 挂到所有 RestClient。
+ * 由 {@link FanRestAutoConfiguration} 注册为 Bean，
+ * 随 {@link HttpServiceFactoryImpl} 挂到所有 RestClient。
  * 开关见 {@code fan.rest.log.enabled}。
  */
 @Slf4j

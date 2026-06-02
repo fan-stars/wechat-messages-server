@@ -1,5 +1,6 @@
 package cn.fanstars.framework.rest.core.util;
 
+import cn.fanstars.framework.rest.core.converters.FastJsonRestMessageConverters;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import org.springframework.util.LinkedMultiValueMap;
@@ -12,8 +13,8 @@ import java.util.Map;
  * RestClient 请求参数 Map 工具
  * <p>
  * 将 VO 转为 {@code Map}，供 {@code @RequestParam Map}、表单字段拼装等使用。
- * 字段名取自 VO 上的 {@code @JSONField}（经 JSON 序列化/反序列化一轮，与 Retrofit 时代 {@code Retrofit2Utils#parseMap} 行为一致）。
- * 通常与 {@link cn.fanstars.framework.rest.core.converters.FastJsonRestMessageConverters} 搭配使用。
+ * 字段名取自 VO 上的 {@code @JSONField}（经 JSON 序列化/反序列化一轮，与 {@link #parseMap(Object)} 语义一致）。
+ * 通常与 {@link FastJsonRestMessageConverters} 搭配使用。
  */
 public final class RestParamUtils {
 
@@ -40,7 +41,7 @@ public final class RestParamUtils {
     }
 
     /**
-     * 合并两组 Query/表单参数（等价于 Retrofit 双 {@code @QueryMap}）
+     * 合并两组 Query/表单参数
      * <p>
      * {@code extra} 中同名 key 覆盖 {@code base}；任一为 null 时按空 Map 处理
      */

@@ -15,7 +15,7 @@ import java.net.Proxy;
 public class RestClientProperties {
 
     /**
-     * 懒加载缓存的代理实例，与 fan-framework-retrofit2 行为一致
+     * 懒加载缓存的代理实例
      */
     private static Proxy proxy = null;
 

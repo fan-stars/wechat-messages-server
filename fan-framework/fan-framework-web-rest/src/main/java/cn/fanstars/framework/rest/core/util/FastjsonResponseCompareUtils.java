@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 /**
- * Fastjson 响应体比对工具，逻辑与 retrofit2 {@code FastjsonConverterFactory} 非生产环境对比一致
+ * Fastjson 响应体比对工具，非生产环境可对「原始 JSON」与「反序列化后再序列化」结果做一致性校验
  * <p>
  * 用于排查「原始 JSON」与「Fastjson 解析后再序列化」不一致的问题（类型、精度、字段丢失等）。
  */

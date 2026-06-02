@@ -91,14 +91,14 @@ public final class FastJsonRestMessageConverters {
     }
 
     /**
-     * 在 Fastjson 实际反序列化后执行比对，逻辑与 retrofit2 FastjsonConverterFactory 对齐
+     * 在 Fastjson 实际反序列化后执行响应体比对
      */
     private static final class ComparingFastJsonHttpMessageConverter extends FastJsonHttpMessageConverter {
 
         /**
          * 按完整 Type 进行响应反序列化，并在反序列化后执行一次响应对比。
          * <p>
-         * 该路径可覆盖泛型返回值（如 List&lt;Foo&gt;）场景，行为与 retrofit2 的 Type 解析路径保持一致。
+         * 该路径可覆盖泛型返回值（如 List&lt;Foo&gt;）场景，按完整 Type 解析。
          */
         @Override
         @NonNull
@@ -109,7 +109,7 @@ public final class FastJsonRestMessageConverters {
             CachedBodyHttpInputMessage cachedInputMessage = new CachedBodyHttpInputMessage(responseBody, inputMessage.getHeaders());
             // super.read(...) 会按目标 Type 真正反序列化，这也是比对能发现类型差异的关键
             Object converterResponse = super.read(type, contextClass, cachedInputMessage);
-            // 使用「原始响应文本 vs 反序列化后对象」执行比对，行为对齐 retrofit2
+            // 使用「原始响应文本 vs 反序列化后对象」执行比对
             FastjsonResponseCompareUtils.compareIfNeeded(toResponseBodyText(responseBody, inputMessage.getHeaders()), converterResponse);
             return converterResponse;
         }
