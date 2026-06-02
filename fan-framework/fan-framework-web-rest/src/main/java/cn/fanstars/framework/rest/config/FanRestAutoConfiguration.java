@@ -37,7 +37,7 @@ public class FanRestAutoConfiguration {
     }
 
     /**
-     * 全局日志拦截器：请求/响应日志 + 非生产环境 Fastjson 响应比对
+     * 全局日志拦截器：请求/响应日志
      * <p>
      * 实现 {@link ClientHttpRequestInterceptor}，会随 httpServiceFactory 注入到所有 RestClient。
      * {@code fan.rest.log.enabled=false} 时不注册，无日志与响应体缓冲开销。

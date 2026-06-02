@@ -80,7 +80,7 @@ public class RestClientProperties {
          */
         private Boolean enabled = true;
         /**
-         * 是否执行 Fastjson 响应比对（仅非 prod 且 enabled=true 时生效）
+         * 是否执行 Fastjson 响应比对（仅非 prod 且启用 Fastjson 消息转换器时生效）
          */
         private Boolean compareEnabled = true;
         /**

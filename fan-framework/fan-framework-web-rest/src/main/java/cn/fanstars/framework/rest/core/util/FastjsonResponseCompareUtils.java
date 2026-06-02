@@ -1,6 +1,7 @@
 package cn.fanstars.framework.rest.core.util;
 
 import cn.fanstars.framework.common.util.spring.SpringUtils;
+import cn.fanstars.framework.rest.config.RestClientProperties;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -27,16 +28,25 @@ public final class FastjsonResponseCompareUtils {
      * 非生产环境：对比原始 JSON 与 Fastjson 解析后再序列化的结果，不一致时递归打印字段差异
      */
     public static void compareIfNeeded(String responseBody) {
-        if (SpringUtils.isProd() || !StringUtils.hasText(responseBody)) {
+        if (!StringUtils.hasText(responseBody)) {
+            return;
+        }
+        Object parsed = JSON.parse(responseBody);
+        compareIfNeeded(responseBody, parsed);
+    }
+
+    /**
+     * 非生产环境：对比原始 JSON 与目标类型对象反序列化结果，不一致时递归打印字段差异
+     */
+    public static void compareIfNeeded(String responseBody, Object converterResponse) {
+        if (SpringUtils.isProd() || !StringUtils.hasText(responseBody) || !isCompareEnabled()) {
             return; // 生产环境关闭，避免额外开销
         }
         try {
             // 原始串 → JSONObject → 排序序列化
             String originResult = JSON.toJSONString(JSONObject.parse(responseBody), SerializerFeature.MapSortField);
-            // 模拟通用解析路径（无具体 Type 时与 parse 行为一致）
-            Object parsed = JSON.parse(responseBody);
-            String converterResult = parsed instanceof String ? parsed.toString()
-                    : JSON.toJSONString(parsed, SerializerFeature.MapSortField);
+            String converterResult = converterResponse instanceof String ? converterResponse.toString()
+                    : JSON.toJSONString(converterResponse, SerializerFeature.MapSortField);
             if (!originResult.equals(converterResult)) {
                 log.info("[RestClient] fastjson compare originResult:    {}", originResult);
                 log.info("[RestClient] fastjson compare converterResult: {}", converterResult);
@@ -44,6 +54,17 @@ public final class FastjsonResponseCompareUtils {
             }
         } catch (Exception e) {
             log.info("[RestClient] fastjson compare error: ", e);
+        }
+    }
+
+    private static boolean isCompareEnabled() {
+        try {
+            RestClientProperties properties = SpringUtils.getBean(RestClientProperties.class);
+            return properties != null && properties.getLog() != null
+                    && Boolean.TRUE.equals(properties.getLog().getCompareEnabled());
+        } catch (Exception ignored) {
+            // 非 Spring 上下文或未注册配置时，保持默认开启
+            return true;
         }
     }
 
