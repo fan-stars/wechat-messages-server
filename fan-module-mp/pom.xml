@@ -71,7 +71,7 @@
 
         <dependency>
             <groupId>cn.fanstars.wechat-messages-server</groupId>
-            <artifactId>fan-framework-retrofit2</artifactId>
+            <artifactId>fan-framework-web-rest</artifactId>
         </dependency>
 
         <!-- 三方云服务相关 -->

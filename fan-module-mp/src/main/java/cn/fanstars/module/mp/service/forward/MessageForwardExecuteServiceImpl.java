@@ -7,8 +7,8 @@ import cn.fanstars.module.mp.dal.dataobject.forward.rule.MessageForwardRuleDO;
 import cn.fanstars.module.mp.dal.mysql.forward.rule.MessageForwardRuleMapper;
 import cn.fanstars.module.mp.enums.forward.MessageForwardLogStatusEnum;
 import cn.fanstars.module.mp.framework.mp.core.MpServiceFactory;
-import cn.fanstars.module.mp.framework.retrofit2.bo.MpMessageForwardHttpResultBO;
-import cn.fanstars.module.mp.framework.retrofit2.service.MpMessageForwardClient;
+import cn.fanstars.module.mp.framework.rest.bo.MpMessageForwardHttpResultBO;
+import cn.fanstars.module.mp.framework.rest.service.MpMessageForwardClient;
 import cn.fanstars.module.mp.service.forward.bo.RuleForwardOutcome;
 import cn.fanstars.module.mp.service.forward.log.MessageForwardLogService;
 import cn.hutool.core.util.StrUtil;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * 公众号消息转发执行 Service 实现类
  * <p>
- * 供 {@link cn.fanstars.module.mp.service.message.MpMessageReplyOrchestrator} 调用：规则匹配、单条 HTTP 透传（Retrofit）、日志落库。
+ * 供 {@link cn.fanstars.module.mp.service.message.MpMessageReplyOrchestrator} 调用：规则匹配、单条 HTTP 透传（RestClient）、日志落库。
  * 同步规则 HTTP 本身不写日志，由编排器在合适的时机调用 {@link #saveSyncRuleLog}。
  */
 @Service
@@ -84,7 +84,7 @@ public class MessageForwardExecuteServiceImpl {
     /**
      * 单条同步规则 HTTP 透传（不写日志，供并行编排）
      * <p>
-     * OkHttp 超时默认取规则 {@code timeout_ms}。仅当 {@code use_response_as_reply=true} 时，才与
+     * HTTP 超时默认取规则 {@code timeout_ms}。仅当 {@code use_response_as_reply=true} 时，才与
      * {@code replyWaitRemainingMs} 取 min，避免占用被动回复窗口仍无法回微信。
      * <p>
      * 仅 {@code receive_response=true}、不作为被动回复时，编排器主线程超时返回后 HTTP 仍按规则完整超时继续等待，
@@ -182,7 +182,7 @@ public class MessageForwardExecuteServiceImpl {
     }
 
     /**
-     * 单条规则 HTTP 透传（Retrofit 同步调用）
+     * 单条规则 HTTP 透传（RestClient 同步调用）
      */
     private ForwardHttpResult doForwardHttp(MessageForwardRuleDO rule, String rawContent,
                                             MpOpenHandleMessageReqVO reqVO, Long messageId, int timeoutMs) {

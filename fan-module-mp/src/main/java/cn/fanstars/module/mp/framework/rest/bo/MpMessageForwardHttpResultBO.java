@@ -1,11 +1,11 @@
-package cn.fanstars.module.mp.framework.retrofit2.bo;
+package cn.fanstars.module.mp.framework.rest.bo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 消息转发 HTTP 调用结果（Retrofit 层，不含业务日志状态）
+ * 消息转发 HTTP 调用结果（RestClient 层，不含业务日志状态）
  */
 @Data
 @NoArgsConstructor
