@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Schema(description = "管理后台 - 定时任务 Response VO")
 @Data
@@ -36,6 +37,20 @@ public class JobRespVO {
     @Schema(description = "处理器的参数", example = "fan")
     @ExcelProperty("处理器的参数")
     private String handlerParam;
+
+    /**
+     * 处理器参数字段定义
+     * 来自 JobHandler#getParamFields()，仅 GET 详情返回，创建/修改请求体不包含
+     */
+    @Schema(description = "处理器参数字段定义（编辑表单用，仅 get 详情返回）")
+    private List<JobParamFieldRespVO> paramFields;
+
+    /**
+     * 处理器参数形态：object / array / string_array
+     * 来自 JobHandler#getParamShape()，仅 GET 详情返回
+     */
+    @Schema(description = "处理器参数形态：object / array / string_array（仅 get 详情返回）", example = "object")
+    private String paramShape;
 
     @Schema(description = "CRON 表达式", requiredMode = Schema.RequiredMode.REQUIRED, example = "0/10 * * * * ? *")
     @ExcelProperty("CRON 表达式")

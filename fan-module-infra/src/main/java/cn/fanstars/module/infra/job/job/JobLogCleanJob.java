@@ -1,11 +1,17 @@
 package cn.fanstars.module.infra.job.job;
 
 import cn.fanstars.framework.quartz.core.handler.JobHandler;
+import cn.fanstars.framework.quartz.core.handler.param.JobParamField;
 import cn.fanstars.framework.tenant.core.aop.TenantIgnore;
+import cn.fanstars.module.infra.job.dto.JobCleanParamDTO;
+import cn.fanstars.module.infra.job.util.JobCleanParamFields;
+import cn.fanstars.module.infra.job.util.JobCleanParamUtils;
 import cn.fanstars.module.infra.service.job.JobLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.Resource;
+
+import java.util.List;
 
 /**
  * 物理删除 N 天前的任务日志的 Job
@@ -32,9 +38,21 @@ public class JobLogCleanJob implements JobHandler {
     @Override
     @TenantIgnore
     public String execute(String param) {
-        Integer count = jobLogService.cleanJobLog(JOB_CLEAN_RETAIN_DAY, DELETE_LIMIT);
+        JobCleanParamDTO config = JobCleanParamUtils.resolveRetainDayAndDeleteLimit(
+                param, JOB_CLEAN_RETAIN_DAY, DELETE_LIMIT);
+        Integer count = jobLogService.cleanJobLog(config.getRetainDay(), config.getDeleteLimit());
         log.info("[execute][定时执行清理定时任务日志数量 ({}) 个]", count);
         return String.format("定时执行清理定时任务日志数量 %s 个", count);
     }
+
+    /**
+     * object 形态
+     * 示例：{"retainDay":14,"deleteLimit":100}
+     */
+    @Override
+    public List<JobParamField> getParamFields() {
+        return JobCleanParamFields.build();
+    }
+
 
 }

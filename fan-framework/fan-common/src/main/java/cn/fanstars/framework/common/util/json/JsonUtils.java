@@ -248,6 +248,14 @@ public class JsonUtils {
     }
 
     /**
+     * 判断字符串是否为 JSON 数组
+     * 用于 handlerParam array / string_array 校验
+     */
+    public static boolean isJsonArray(String str) {
+        return JSONUtil.isTypeJSONArray(str);
+    }
+
+    /**
      * 将 Object 转换为目标类型
      * <p>
      * 避免先转 jsonString 再 parseObject 的性能损耗
