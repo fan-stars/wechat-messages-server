@@ -2,6 +2,7 @@ package cn.fanstars.module.infra.service.job;
 
 import cn.fanstars.framework.common.pojo.PageResult;
 import cn.fanstars.module.infra.controller.admin.job.vo.job.JobPageReqVO;
+import cn.fanstars.module.infra.controller.admin.job.vo.job.JobRespVO;
 import cn.fanstars.module.infra.controller.admin.job.vo.job.JobSaveReqVO;
 import cn.fanstars.module.infra.dal.dataobject.job.JobDO;
 import jakarta.validation.Valid;
@@ -74,6 +75,14 @@ public interface JobService {
      * @return 定时任务
      */
     JobDO getJob(Long id);
+
+    /**
+     * 获得定时任务详情（含处理器参数字段定义）
+     *
+     * @param id 编号
+     * @return 定时任务详情
+     */
+    JobRespVO getJobDetail(Long id);
 
     /**
      * 获得定时任务分页

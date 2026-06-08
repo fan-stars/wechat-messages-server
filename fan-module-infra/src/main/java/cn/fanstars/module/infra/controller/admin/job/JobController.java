@@ -113,8 +113,7 @@ public class JobController {
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('infra:job:query')")
     public CommonResult<JobRespVO> getJob(@RequestParam("id") Long id) {
-        JobDO job = jobService.getJob(id);
-        return success(BeanUtils.toBean(job, JobRespVO.class));
+        return success(jobService.getJobDetail(id));
     }
 
     @GetMapping("/page")

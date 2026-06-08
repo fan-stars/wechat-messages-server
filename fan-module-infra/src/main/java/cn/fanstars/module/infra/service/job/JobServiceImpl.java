@@ -1,16 +1,26 @@
 package cn.fanstars.module.infra.service.job;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.fanstars.framework.common.pojo.PageResult;
+import cn.fanstars.framework.common.util.json.JsonUtils;
 import cn.fanstars.framework.common.util.object.BeanUtils;
 import cn.fanstars.framework.quartz.core.handler.JobHandler;
+import cn.fanstars.framework.quartz.core.handler.param.JobParamField;
+import cn.fanstars.framework.quartz.core.handler.param.JobParamShape;
 import cn.fanstars.framework.quartz.core.scheduler.SchedulerManager;
 import cn.fanstars.framework.quartz.core.util.CronUtils;
 import cn.fanstars.module.infra.controller.admin.job.vo.job.JobPageReqVO;
+import cn.fanstars.module.infra.controller.admin.job.vo.job.JobParamFieldRespVO;
+import cn.fanstars.module.infra.controller.admin.job.vo.job.JobRespVO;
 import cn.fanstars.module.infra.controller.admin.job.vo.job.JobSaveReqVO;
 import cn.fanstars.module.infra.dal.dataobject.job.JobDO;
 import cn.fanstars.module.infra.dal.mysql.job.JobMapper;
 import cn.fanstars.module.infra.enums.job.JobStatusEnum;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
@@ -19,7 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static cn.fanstars.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -52,6 +64,8 @@ public class JobServiceImpl implements JobService {
         }
         // 1.2 校验 JobHandler 是否存在
         validateJobHandlerExists(createReqVO.getHandlerName());
+        // 1.3 校验参数（新建不强制结构化 JSON）
+        validateHandlerParamOnCreate(createReqVO.getHandlerName(), createReqVO.getHandlerParam());
 
         // 2. 插入 JobDO
         JobDO job = BeanUtils.toBean(createReqVO, JobDO.class);
@@ -80,6 +94,8 @@ public class JobServiceImpl implements JobService {
         }
         // 1.3 校验 JobHandler 是否存在
         validateJobHandlerExists(updateReqVO.getHandlerName());
+        // 1.4 校验参数（编辑时按 Handler 的 paramShape 校验 JSON）
+        validateHandlerParamOnUpdate(updateReqVO.getHandlerName(), updateReqVO.getHandlerParam());
 
         // 2. 更新 JobDO
         JobDO updateObj = BeanUtils.toBean(updateReqVO, JobDO.class);
@@ -194,6 +210,138 @@ public class JobServiceImpl implements JobService {
         if (!CronUtils.isValid(cronExpression)) {
             throw exception(JOB_CRON_EXPRESSION_VALID);
         }
+    }
+
+    /**
+     * 新建任务参数校验
+     * 保持原始单行输入，不强制 JSON（与前端新建 UI 一致）
+     */
+    private void validateHandlerParamOnCreate(String handlerName, String handlerParam) {
+    }
+
+    /**
+     * 编辑任务：按 JobHandler#getParamShape() 分支校验 handlerParam
+     * <p>
+     * - 无字段定义且 object 形态：跳过
+     * - object：JSON 对象 + 必填字段
+     * - array：JSON 对象数组，每条校验必填字段
+     * - string_array：JSON 字符串数组，元素非空
+     */
+    private void validateHandlerParamOnUpdate(String handlerName, String handlerParam) {
+        JobHandler jobHandler = getJobHandler(handlerName);
+        List<JobParamField> paramFields = jobHandler.getParamFields();
+        if (paramFields == null) {
+            paramFields = Collections.emptyList();
+        }
+        JobParamShape paramShape = jobHandler.getParamShape();
+        if (paramShape == null) {
+            paramShape = JobParamShape.OBJECT;
+        }
+        if (paramShape == JobParamShape.OBJECT && CollUtil.isEmpty(paramFields)) {
+            return;
+        }
+        if (StrUtil.isBlank(handlerParam)) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        switch (paramShape) {
+            case ARRAY -> validateHandlerParamArray(handlerParam, paramFields);
+            case STRING_ARRAY -> validateHandlerParamStringArray(handlerParam);
+            default -> validateHandlerParamObject(handlerParam, paramFields);
+        }
+    }
+
+    /**
+     * object 形态校验
+     * 示例：{@code {"retainDay":14}}
+     */
+    private void validateHandlerParamObject(String handlerParam, List<JobParamField> paramFields) {
+        if (!JsonUtils.isJsonObject(handlerParam)) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        Map<String, Object> paramMap = JSONObject.parseObject(handlerParam, new TypeReference<>() {
+        });
+        validateRequiredFields(paramMap, paramFields);
+    }
+
+    /**
+     * string_array 形态校验
+     * 示例：{@code ["a.com","b.com"]}，允许空数组
+     */
+    private void validateHandlerParamStringArray(String handlerParam) {
+        if (!JsonUtils.isJsonArray(handlerParam)) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        JSONArray array = JSONArray.parseArray(handlerParam);
+        if (array == null) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        for (Object element : array) {
+            if (!(element instanceof String) || StrUtil.isBlank((String) element)) {
+                throw exception(JOB_HANDLER_PARAM_INVALID);
+            }
+        }
+    }
+
+    /**
+     * array 形态校验
+     * 示例：{@code [{...},{...}]}，每条配置校验必填字段
+     */
+    @SuppressWarnings("unchecked")
+    private void validateHandlerParamArray(String handlerParam, List<JobParamField> paramFields) {
+        if (CollUtil.isEmpty(paramFields)) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        if (!JsonUtils.isJsonArray(handlerParam)) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        JSONArray array = JSONArray.parseArray(handlerParam);
+        if (array == null) {
+            throw exception(JOB_HANDLER_PARAM_INVALID);
+        }
+        for (Object element : array) {
+            if (!(element instanceof Map)) {
+                throw exception(JOB_HANDLER_PARAM_INVALID);
+            }
+            validateRequiredFields((Map<String, Object>) element, paramFields);
+        }
+    }
+
+    /**
+     * 校验 object / array 单条配置中的必填字段
+     */
+    private void validateRequiredFields(Map<String, Object> paramMap, List<JobParamField> paramFields) {
+        for (JobParamField field : paramFields) {
+            if (!Boolean.TRUE.equals(field.getRequired())) {
+                continue;
+            }
+            Object value = paramMap.get(field.getKey());
+            if (value == null || (value instanceof String && StrUtil.isBlank((String) value))) {
+                throw exception(JOB_HANDLER_PARAM_INVALID);
+            }
+        }
+    }
+
+    /**
+     * 任务详情
+     * 除 DO 字段外，附带 paramFields + paramShape 供编辑表单结构化渲染（不入库）
+     */
+    @Override
+    public JobRespVO getJobDetail(Long id) {
+        JobDO job = validateJobExists(id);
+        JobRespVO respVO = BeanUtils.toBean(job, JobRespVO.class);
+        JobHandler jobHandler = getJobHandler(job.getHandlerName());
+        respVO.setParamFields(BeanUtils.toBean(
+                jobHandler.getParamFields() != null ? jobHandler.getParamFields() : Collections.emptyList(),
+                JobParamFieldRespVO.class));
+        JobParamShape paramShape = jobHandler.getParamShape();
+        // 与前端约定小写枚举名：object / array / string_array
+        respVO.setParamShape(paramShape != null ? paramShape.name().toLowerCase() : JobParamShape.OBJECT.name().toLowerCase());
+        return respVO;
+    }
+
+    private JobHandler getJobHandler(String handlerName) {
+        validateJobHandlerExists(handlerName);
+        return SpringUtil.getBean(handlerName, JobHandler.class);
     }
 
     @Override
