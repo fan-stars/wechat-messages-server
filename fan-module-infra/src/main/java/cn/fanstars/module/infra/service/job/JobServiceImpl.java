@@ -19,8 +19,6 @@ import cn.fanstars.module.infra.dal.dataobject.job.JobDO;
 import cn.fanstars.module.infra.dal.mysql.job.JobMapper;
 import cn.fanstars.module.infra.enums.job.JobStatusEnum;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
@@ -102,9 +100,10 @@ public class JobServiceImpl implements JobService {
         fillJobMonitorTimeoutEmpty(updateObj);
         jobMapper.updateById(updateObj);
 
-        // 3. 更新 Job 到 Quartz 中
-        schedulerManager.updateJob(job.getHandlerName(), updateReqVO.getHandlerParam(), updateReqVO.getCronExpression(),
-                updateReqVO.getRetryCount(), updateReqVO.getRetryInterval());
+        // 3. 更新 Job 到 Quartz 中（不存在则新增）
+        JobDO quartzJob = BeanUtils.toBean(updateReqVO, JobDO.class);
+        quartzJob.setId(job.getId());
+        addOrUpdateJob(quartzJob);
     }
 
     private void validateJobHandlerExists(String handlerName) {
@@ -136,7 +135,8 @@ public class JobServiceImpl implements JobService {
         JobDO updateObj = JobDO.builder().id(id).status(status).build();
         jobMapper.updateById(updateObj);
 
-        // 更新状态 Job 到 Quartz 中
+        // 更新状态 Job 到 Quartz 中（不存在则先新增）
+        addOrUpdateJob(job);
         if (JobStatusEnum.NORMAL.getStatus().equals(status)) { // 开启
             schedulerManager.resumeJob(job.getHandlerName());
         } else { // 暂停
@@ -149,7 +149,13 @@ public class JobServiceImpl implements JobService {
         // 校验存在
         JobDO job = validateJobExists(id);
 
-        // 触发 Quartz 中的 Job
+        // 触发 Quartz 中的 Job（不存在则先新增）
+        if (!schedulerManager.jobExists(job.getHandlerName())) {
+            addOrUpdateJob(job);
+            if (Objects.equals(job.getStatus(), JobStatusEnum.STOP.getStatus())) {
+                schedulerManager.pauseJob(job.getHandlerName());
+            }
+        }
         schedulerManager.triggerJob(job.getId(), job.getHandlerName(), job.getHandlerParam());
     }
 
@@ -161,10 +167,8 @@ public class JobServiceImpl implements JobService {
 
         // 2. 遍历处理
         for (JobDO job : jobList) {
-            // 2.1 先删除，再创建
-            schedulerManager.deleteJob(job.getHandlerName());
-            schedulerManager.addJob(job.getId(), job.getHandlerName(), job.getHandlerParam(), job.getCronExpression(),
-                    job.getRetryCount(), job.getRetryInterval());
+            // 2.1 存在则更新，不存在则新增
+            addOrUpdateJob(job);
             // 2.2 如果 status 为暂停，则需要暂停
             if (Objects.equals(job.getStatus(), JobStatusEnum.STOP.getStatus())) {
                 schedulerManager.pauseJob(job.getHandlerName());
@@ -214,20 +218,31 @@ public class JobServiceImpl implements JobService {
 
     /**
      * 新建任务参数校验
-     * 保持原始单行输入，不强制 JSON（与前端新建 UI 一致）
      */
     private void validateHandlerParamOnCreate(String handlerName, String handlerParam) {
+        validateHandlerParam(handlerName, handlerParam);
     }
 
     /**
-     * 编辑任务：按 JobHandler#getParamShape() 分支校验 handlerParam
-     * <p>
-     * - 无字段定义且 object 形态：跳过
-     * - object：JSON 对象 + 必填字段
-     * - array：JSON 对象数组，每条校验必填字段
-     * - string_array：JSON 字符串数组，元素非空
+     * 编辑任务参数校验
      */
     private void validateHandlerParamOnUpdate(String handlerName, String handlerParam) {
+        validateHandlerParam(handlerName, handlerParam);
+    }
+
+    /**
+     * 按 JobHandler#getParamShape() 校验 handlerParam（参数允许为空）
+     * <p>
+     * - 为空：跳过
+     * - 无字段定义且 object 形态：跳过
+     * - object：合法 JSON 对象
+     * - array：合法 JSON 对象数组
+     * - string_array：合法 JSON 字符串数组
+     */
+    private void validateHandlerParam(String handlerName, String handlerParam) {
+        if (StrUtil.isBlank(handlerParam)) {
+            return;
+        }
         JobHandler jobHandler = getJobHandler(handlerName);
         List<JobParamField> paramFields = jobHandler.getParamFields();
         if (paramFields == null) {
@@ -240,13 +255,10 @@ public class JobServiceImpl implements JobService {
         if (paramShape == JobParamShape.OBJECT && CollUtil.isEmpty(paramFields)) {
             return;
         }
-        if (StrUtil.isBlank(handlerParam)) {
-            throw exception(JOB_HANDLER_PARAM_INVALID);
-        }
         switch (paramShape) {
-            case ARRAY -> validateHandlerParamArray(handlerParam, paramFields);
+            case ARRAY -> validateHandlerParamArray(handlerParam);
             case STRING_ARRAY -> validateHandlerParamStringArray(handlerParam);
-            default -> validateHandlerParamObject(handlerParam, paramFields);
+            default -> validateHandlerParamObject(handlerParam);
         }
     }
 
@@ -254,13 +266,10 @@ public class JobServiceImpl implements JobService {
      * object 形态校验
      * 示例：{@code {"retainDay":14}}
      */
-    private void validateHandlerParamObject(String handlerParam, List<JobParamField> paramFields) {
+    private void validateHandlerParamObject(String handlerParam) {
         if (!JsonUtils.isJsonObject(handlerParam)) {
             throw exception(JOB_HANDLER_PARAM_INVALID);
         }
-        Map<String, Object> paramMap = JSONObject.parseObject(handlerParam, new TypeReference<>() {
-        });
-        validateRequiredFields(paramMap, paramFields);
     }
 
     /**
@@ -284,13 +293,9 @@ public class JobServiceImpl implements JobService {
 
     /**
      * array 形态校验
-     * 示例：{@code [{...},{...}]}，每条配置校验必填字段
+     * 示例：{@code [{...},{...}]}
      */
-    @SuppressWarnings("unchecked")
-    private void validateHandlerParamArray(String handlerParam, List<JobParamField> paramFields) {
-        if (CollUtil.isEmpty(paramFields)) {
-            throw exception(JOB_HANDLER_PARAM_INVALID);
-        }
+    private void validateHandlerParamArray(String handlerParam) {
         if (!JsonUtils.isJsonArray(handlerParam)) {
             throw exception(JOB_HANDLER_PARAM_INVALID);
         }
@@ -300,22 +305,6 @@ public class JobServiceImpl implements JobService {
         }
         for (Object element : array) {
             if (!(element instanceof Map)) {
-                throw exception(JOB_HANDLER_PARAM_INVALID);
-            }
-            validateRequiredFields((Map<String, Object>) element, paramFields);
-        }
-    }
-
-    /**
-     * 校验 object / array 单条配置中的必填字段
-     */
-    private void validateRequiredFields(Map<String, Object> paramMap, List<JobParamField> paramFields) {
-        for (JobParamField field : paramFields) {
-            if (!Boolean.TRUE.equals(field.getRequired())) {
-                continue;
-            }
-            Object value = paramMap.get(field.getKey());
-            if (value == null || (value instanceof String && StrUtil.isBlank((String) value))) {
                 throw exception(JOB_HANDLER_PARAM_INVALID);
             }
         }
@@ -357,6 +346,19 @@ public class JobServiceImpl implements JobService {
     private static void fillJobMonitorTimeoutEmpty(JobDO job) {
         if (job.getMonitorTimeout() == null) {
             job.setMonitorTimeout(0);
+        }
+    }
+
+    /**
+     * 同步 Job 到 Quartz：已存在则更新 Trigger，不存在则新增 Job
+     */
+    private void addOrUpdateJob(JobDO job) throws SchedulerException {
+        if (schedulerManager.jobExists(job.getHandlerName())) {
+            schedulerManager.updateJob(job.getHandlerName(), job.getHandlerParam(), job.getCronExpression(),
+                    job.getRetryCount(), job.getRetryInterval());
+        } else {
+            schedulerManager.addJob(job.getId(), job.getHandlerName(), job.getHandlerParam(), job.getCronExpression(),
+                    job.getRetryCount(), job.getRetryInterval());
         }
     }
 
