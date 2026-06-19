@@ -45,7 +45,7 @@
         </dependency>
 
         <dependency>
-            <groupId>cn.fanstars.base</groupId>
+            <groupId>cn.fanstars.wechat-messages-server</groupId>
             <artifactId>fan-framework-web-rest</artifactId>
         </dependency>
 
