@@ -22,6 +22,7 @@ public interface SmsTemplateMapper extends BaseMapperX<SmsTemplateDO> {
                 .likeIfPresent(SmsTemplateDO::getContent, reqVO.getContent())
                 .likeIfPresent(SmsTemplateDO::getApiTemplateId, reqVO.getApiTemplateId())
                 .eqIfPresent(SmsTemplateDO::getChannelId, reqVO.getChannelId())
+                .eqIfPresent(SmsTemplateDO::getAuditStatus, reqVO.getAuditStatus())
                 .betweenIfPresent(SmsTemplateDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(SmsTemplateDO::getId));
     }

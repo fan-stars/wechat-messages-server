@@ -75,6 +75,21 @@ public class SmsTemplateDO extends BaseDO {
      */
     private String apiTemplateId;
 
+    /**
+     * 审核状态
+     *
+     * 枚举 {@link cn.fanstars.module.system.framework.sms.core.enums.SmsTemplateAuditStatusEnum}
+     */
+    private Integer auditStatus;
+    /**
+     * 审核未通过原因
+     */
+    private String auditReason;
+    /**
+     * 最近一次同步审核状态时间
+     */
+    private java.time.LocalDateTime auditSyncTime;
+
     // ========= 渠道相关字段 =========
 
     /**
