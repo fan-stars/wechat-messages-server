@@ -35,6 +35,9 @@ public class SmsTemplatePageReqVO extends PageParam {
     @Schema(description = "短信渠道编号", example = "10")
     private Long channelId;
 
+    @Schema(description = "审核状态，参见 SmsTemplateAuditStatusEnum", example = "2")
+    private Integer auditStatus;
+
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     @Schema(description = "创建时间")
     private LocalDateTime[] createTime;

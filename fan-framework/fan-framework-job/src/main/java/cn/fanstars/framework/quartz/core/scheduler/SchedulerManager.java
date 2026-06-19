@@ -52,6 +52,11 @@ public class SchedulerManager {
         scheduler.scheduleJob(jobDetail, trigger);
     }
 
+    public boolean jobExists(String jobHandlerName) throws SchedulerException {
+        validateScheduler();
+        return scheduler.checkExists(new JobKey(jobHandlerName));
+    }
+
     /**
      * 更新 Job 到 Quartz
      *

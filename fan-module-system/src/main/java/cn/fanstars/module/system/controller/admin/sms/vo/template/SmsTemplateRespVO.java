@@ -62,6 +62,19 @@ public class SmsTemplateRespVO {
     @DictFormat(DictTypeConstants.SMS_CHANNEL_CODE)
     private String channelCode;
 
+    @Schema(description = "审核状态，参见 SmsTemplateAuditStatusEnum", example = "2")
+    @ExcelProperty(value = "审核状态", converter = DictConvert.class)
+    @DictFormat(DictTypeConstants.SMS_TEMPLATE_AUDIT_STATUS)
+    private Integer auditStatus;
+
+    @Schema(description = "审核未通过原因", example = "内容不符合规范")
+    @ExcelProperty("审核未通过原因")
+    private String auditReason;
+
+    @Schema(description = "最近一次同步审核状态时间")
+    @ExcelProperty("审核同步时间")
+    private LocalDateTime auditSyncTime;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

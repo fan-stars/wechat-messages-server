@@ -90,6 +90,11 @@ public interface ErrorCodeConstants {
     ErrorCode SMS_TEMPLATE_API_AUDIT_CHECKING = new ErrorCode(1_002_012_003, "短信 API 模版无法使用，原因：审批中");
     ErrorCode SMS_TEMPLATE_API_AUDIT_FAIL = new ErrorCode(1_002_012_004, "短信 API 模版无法使用，原因：审批不通过，{}");
     ErrorCode SMS_TEMPLATE_API_NOT_FOUND = new ErrorCode(1_002_012_005, "短信 API 模版无法使用，原因：模版不存在");
+    ErrorCode SMS_TEMPLATE_AUDIT_NOT_SUBMITTED = new ErrorCode(1_002_012_006, "短信模板未提交云平台审核，无法同步状态");
+    ErrorCode SMS_TEMPLATE_AUDIT_NOT_PASSED = new ErrorCode(1_002_012_007, "短信模板审核未通过，禁止发送");
+    ErrorCode SMS_TEMPLATE_SUBMIT_AUDIT_FAIL = new ErrorCode(1_002_012_008, "提交短信模板审核失败，原因：{}");
+    ErrorCode SMS_TEMPLATE_API_TEMPLATE_ID_REQUIRED = new ErrorCode(1_002_012_009, "请填写短信 API 模板编号或开启提交云平台审核");
+    ErrorCode SMS_TEMPLATE_AUDIT_CHANNEL_UNSUPPORTED = new ErrorCode(1_002_012_010, "短信渠道({})不支持云平台审核提交");
 
     // ========== 短信发送 1-002-013-000 ==========
     ErrorCode SMS_SEND_MOBILE_NOT_EXISTS = new ErrorCode(1_002_013_000, "手机号不存在");
@@ -168,5 +173,15 @@ public interface ErrorCodeConstants {
 
     // ========== 站内信发送 1-002-028-000 ==========
     ErrorCode NOTIFY_SEND_TEMPLATE_PARAM_MISS = new ErrorCode(1_002_028_000, "模板参数({})缺失");
+
+    // ========== IM 通知 1-002-029-000 ==========
+    ErrorCode IM_TEMPLATE_NOT_EXISTS = new ErrorCode(1_002_029_000, "IM 模板不存在");
+    ErrorCode IM_TEMPLATE_CODE_DUPLICATE = new ErrorCode(1_002_029_001, "已经存在编码为【{}】的 IM 模板");
+    ErrorCode IM_TEMPLATE_PARAM_MISS = new ErrorCode(1_002_029_002, "模板参数({})缺失");
+    ErrorCode IM_TEMPLATE_DISABLED = new ErrorCode(1_002_029_003, "IM 模板已禁用");
+    ErrorCode IM_WEBHOOK_NOT_EXISTS = new ErrorCode(1_002_029_010, "IM Webhook 不存在");
+    ErrorCode IM_WEBHOOK_DISABLED = new ErrorCode(1_002_029_011, "IM Webhook 已禁用");
+    ErrorCode IM_WEBHOOK_NOT_BOUND = new ErrorCode(1_002_029_012, "IM 模板未绑定 Webhook");
+    ErrorCode IM_SEND_FAIL = new ErrorCode(1_002_029_020, "IM 通知发送失败，原因：{}");
 
 }

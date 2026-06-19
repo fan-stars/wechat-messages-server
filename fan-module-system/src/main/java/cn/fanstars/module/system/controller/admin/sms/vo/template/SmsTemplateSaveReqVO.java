@@ -35,9 +35,11 @@ public class SmsTemplateSaveReqVO {
     @Schema(description = "备注", example = "哈哈哈")
     private String remark;
 
-    @Schema(description = "短信 API 的模板编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "4383920")
-    @NotNull(message = "短信 API 的模板编号不能为空")
+    @Schema(description = "短信 API 的模板编号", example = "4383920")
     private String apiTemplateId;
+
+    @Schema(description = "是否提交云平台审核", example = "false")
+    private Boolean submitAudit;
 
     @Schema(description = "短信渠道编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "10")
     @NotNull(message = "短信渠道编号不能为空")

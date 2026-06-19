@@ -100,6 +100,13 @@ public interface RedisKeyConstants {
     String SMS_TEMPLATE = "sms_template";
 
     /**
+     * IM 通知模版的缓存
+     * <p>
+     * KEY 格式：im_template:{code}
+     */
+    String IM_TEMPLATE = "im_template";
+
+    /**
      * 小程序订阅模版的缓存
      *
      * KEY 格式：wxa_subscribe_template:{userType}

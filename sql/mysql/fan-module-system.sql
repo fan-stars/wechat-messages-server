@@ -661,7 +661,10 @@ CREATE TABLE `system_sms_template`  (
   `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模板内容',
   `params` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '参数数组',
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
-  `api_template_id` varchar(63) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '短信 API 的模板编号',
+  `api_template_id` varchar(63) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '短信 API 的模板编号（提交审核后由云平台返回）',
+  `audit_status` tinyint NOT NULL DEFAULT 1 COMMENT '审核状态：1-审核中 2-审核通过 3-审核不通过',
+  `audit_reason` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '审核未通过原因',
+  `audit_sync_time` datetime NULL DEFAULT NULL COMMENT '最近一次同步审核状态时间',
   `channel_id` bigint NOT NULL COMMENT '短信渠道编号',
   `channel_code` varchar(63) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '短信渠道编码',
   `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
@@ -669,7 +672,8 @@ CREATE TABLE `system_sms_template`  (
   `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_channel_audit_status`(`channel_id`, `audit_status`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '短信模板' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -879,6 +883,112 @@ CREATE TABLE `system_users`  (
 -- ----------------------------
 INSERT INTO `system_users` (`id`, `username`, `password`, `nickname`, `remark`, `dept_id`, `post_ids`, `email`, `mobile`, `sex`, `avatar`, `status`, `login_ip`, `login_date`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `tenant_id`) VALUES (1, 'admin', '$2a$04$KljJDa/LK7QfDm0lF5OhuePhlPfjRH3tB2Wu351Uidz.oQGJXevPi', '繁星源码', '管理员', 1, '[1]', '11aoteman@126.com', '18818260272', 2, 'http://test.fan.iocoder.cn/user/avatar/20250709/blob_1752042302026.jpg', 0, '0:0:0:0:0:0:0:1', '2025-10-14 16:22:47', 'admin', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', 1);
 
+-- ----------------------------
+-- Table structure for system_im_template
+-- ----------------------------
+DROP TABLE IF EXISTS `system_im_template`;
+CREATE TABLE `system_im_template`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `name` varchar(63) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模板名称',
+  `code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模板编码（唯一）',
+  `content` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模板内容，参数使用 {key}',
+  `params` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '参数数组（JSON）',
+  `msg_type` tinyint NOT NULL DEFAULT 1 COMMENT '消息类型：1-文本 2-Markdown',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态（0 开启 1 关闭）',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT 0 COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_code`(`code`, `deleted`, `tenant_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'IM 通知模板表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of system_im_template
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for system_im_webhook
+-- ----------------------------
+DROP TABLE IF EXISTS `system_im_webhook`;
+CREATE TABLE `system_im_webhook`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `name` varchar(63) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '配置名称',
+  `platform` tinyint NOT NULL COMMENT '平台：1-钉钉 2-企微 3-飞书',
+  `access_token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '机器人 access_token / key',
+  `secret` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '钉钉加签 secret；企微/飞书可空',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态（0 开启 1 关闭）',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT 0 COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_platform_status`(`platform`, `status`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'IM Webhook 配置表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of system_im_webhook
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for system_im_template_webhook
+-- ----------------------------
+DROP TABLE IF EXISTS `system_im_template_webhook`;
+CREATE TABLE `system_im_template_webhook`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `template_id` bigint NOT NULL COMMENT '模板编号',
+  `webhook_id` bigint NOT NULL COMMENT 'Webhook 编号',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT 0 COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_template_webhook`(`template_id`, `webhook_id`, `deleted`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'IM 模板与 Webhook 关联表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of system_im_template_webhook
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for system_im_notify_log
+-- ----------------------------
+DROP TABLE IF EXISTS `system_im_notify_log`;
+CREATE TABLE `system_im_notify_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `template_id` bigint NOT NULL COMMENT '模板编号',
+  `template_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模板编码（冗余）',
+  `webhook_id` bigint NOT NULL COMMENT 'Webhook 编号',
+  `platform` tinyint NOT NULL COMMENT '平台：1-钉钉 2-企微 3-飞书',
+  `template_content` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '渲染后的内容',
+  `template_params` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '模板参数（JSON）',
+  `send_status` tinyint NOT NULL DEFAULT 0 COMMENT '发送状态',
+  `send_time` datetime NULL DEFAULT NULL COMMENT '发送时间',
+  `api_send_code` varchar(63) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '平台返回码',
+  `api_send_msg` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '平台返回提示',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT 0 COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_template_code`(`template_code`) USING BTREE,
+  INDEX `idx_webhook_id`(`webhook_id`) USING BTREE,
+  INDEX `idx_send_status`(`send_status`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'IM 通知发送日志' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of system_im_notify_log
+-- ----------------------------
 
 -- ----------------------------
 -- 字典类型 / 字典数据 / 菜单（system 模块）
@@ -903,6 +1013,10 @@ INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creat
 INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (16, '站内信模版的类型', 'system_notify_template_type', 0, '站内信模版的类型', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
 INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (17, '社交类型', 'system_social_type', 0, '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
 INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (18, '时间间隔', 'date_interval', 0, '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (19, '短信模板审核状态', 'system_sms_template_audit_status', 0, NULL, '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (20, 'IM 通知平台', 'system_im_platform', 0, '钉钉/企微/飞书', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (21, 'IM 消息类型', 'system_im_msg_type', 0, '文本/Markdown', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES (22, 'IM 发送状态', 'system_im_send_status', 0, '对齐短信发送状态语义', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0', NULL);
 
 -- system_dict_data
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (1, 1, '男', '1', 'system_user_sex', 0, 'default', 'A', '性别男', 'admin', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
@@ -976,6 +1090,19 @@ INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `st
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (69, 2, '腾讯云', 'TENCENT', 'system_sms_channel_code', 0, '', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (70, 3, '华为云', 'HUAWEI', 'system_sms_channel_code', 0, '', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (71, 4, '七牛云', 'QINIU', 'system_sms_channel_code', 0, '', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (72, 5, '赛邮', 'SUBMAIL', 'system_sms_channel_code', 0, '', '', NULL, '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (73, 1, '审核中', '1', 'system_sms_template_audit_status', 0, 'warning', '', NULL, '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (74, 2, '审核通过', '2', 'system_sms_template_audit_status', 0, 'success', '', NULL, '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (75, 3, '审核不通过', '3', 'system_sms_template_audit_status', 0, 'danger', '', NULL, '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (76, 1, '钉钉', '1', 'system_im_platform', 0, 'primary', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (77, 2, '企业微信', '2', 'system_im_platform', 0, 'success', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (78, 3, '飞书', '3', 'system_im_platform', 0, 'warning', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (79, 1, '文本', '1', 'system_im_msg_type', 0, 'default', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (80, 2, 'Markdown', '2', 'system_im_msg_type', 0, 'primary', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (81, 0, '初始化', '0', 'system_im_send_status', 0, 'primary', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (82, 10, '发送成功', '10', 'system_im_send_status', 0, 'success', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (83, 20, '发送失败', '20', 'system_im_send_status', 0, 'danger', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (84, 30, '不发送', '30', 'system_im_send_status', 0, 'info', '', '', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 
 -- system_menu
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (1, '系统管理', '', 1, 10, 0, '/system', 'ep:tools', NULL, NULL, 0, b'1', b'1', b'1', 'admin', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
@@ -1046,6 +1173,8 @@ INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_i
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (66, '短信模板删除', 'system:sms-template:delete', 3, 4, 62, '', '', '', NULL, 0, b'1', b'1', b'1', '', CURRENT_TIMESTAMP, '', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (67, '短信模板导出', 'system:sms-template:export', 3, 5, 62, '', '', '', NULL, 0, b'1', b'1', b'1', '', CURRENT_TIMESTAMP, '', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (68, '发送测试短信', 'system:sms-template:send-sms', 3, 6, 62, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (123, '提交短信模板审核', 'system:sms-template:submit-audit', 3, 7, 62, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (124, '同步短信模板审核状态', 'system:sms-template:sync-audit-status', 3, 8, 62, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (69, '短信日志', '', 2, 2, 56, 'sms-log', 'fa:edit', 'system/sms/log/index', 'SystemSmsLog', 0, b'1', b'1', b'1', '', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (70, '短信日志查询', 'system:sms-log:query', 3, 1, 69, '', '', '', NULL, 0, b'1', b'1', b'1', '', CURRENT_TIMESTAMP, '', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (71, '短信日志导出', 'system:sms-log:export', 3, 5, 69, '', '', '', NULL, 0, b'1', b'1', b'1', '', CURRENT_TIMESTAMP, '', CURRENT_TIMESTAMP, b'0');
@@ -1100,5 +1229,19 @@ INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_i
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (120, '三方用户', 'system:social-user:query', 2, 2, 114, 'user', 'ep:avatar', 'system/social/user/index.vue', 'SocialUser', 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (121, '消息中心', '', 1, 7, 1, 'messages', 'ep:chat-dot-round', '', '', 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (122, '租户切换', 'system:tenant:visit', 3, 999, 72, '', '', '', '', 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (125, 'IM 通知管理', '', 1, 4, 121, 'im', 'ep:bell', NULL, NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (126, 'Webhook 配置', '', 2, 0, 125, 'im-webhook', 'ep:link', 'system/im/webhook/index', 'SystemImWebhook', 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (127, 'IM 模板', '', 2, 1, 125, 'im-template', 'fa:archive', 'system/im/template/index', 'SystemImTemplate', 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (128, '发送日志', '', 2, 2, 125, 'im-log', 'fa:edit', 'system/im/log/index', 'SystemImNotifyLog', 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (129, 'Webhook 查询', 'system:im-webhook:query', 3, 1, 126, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (130, 'Webhook 创建', 'system:im-webhook:create', 3, 2, 126, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (131, 'Webhook 更新', 'system:im-webhook:update', 3, 3, 126, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (132, 'Webhook 删除', 'system:im-webhook:delete', 3, 4, 126, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (133, 'IM 模板查询', 'system:im-template:query', 3, 1, 127, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (134, 'IM 模板创建', 'system:im-template:create', 3, 2, 127, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (135, 'IM 模板更新', 'system:im-template:update', 3, 3, 127, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (136, 'IM 模板删除', 'system:im-template:delete', 3, 4, 127, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (137, '发送测试 IM 通知', 'system:im-template:send-notify', 3, 5, 127, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (138, 'IM 发送日志查询', 'system:im-notify-log:query', 3, 1, 128, '', '', '', NULL, 0, b'1', b'1', b'1', '1', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP, b'0');
 
 SET FOREIGN_KEY_CHECKS = 1;
